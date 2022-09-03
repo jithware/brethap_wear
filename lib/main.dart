@@ -11,12 +11,15 @@ void main() {
 class MainWidget extends StatelessWidget {
   const MainWidget({Key? key}) : super(key: key);
 
+  static const Color color = Colors.blue;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      // To change device to dark mode run: adb shell "cmd uimode night yes"
       darkTheme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
       home: const HomeWidget(title: 'Brethap for Wear OS'),
@@ -28,7 +31,8 @@ class HomeWidget extends StatefulWidget {
   const HomeWidget({Key? key, required this.title}) : super(key: key);
   final String title;
 
-  static String appName = "Brethap";
+  static const String appName = "Brethap";
+  static const String physSigh = "Physio Sigh";
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -42,7 +46,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   List<int> exhales = [0, 0, 0];
 
   final List<String> presets = [
-    PHYS_SIGH_TEXT,
+    HomeWidget.physSigh,
     PRESET_478_TEXT,
     BOX_TEXT,
     DEFAULT_TEXT,
@@ -118,8 +122,9 @@ class _HomeWidgetState extends State<HomeWidget> {
             _status = getDurationString(const Duration(milliseconds: 0));
             timer.cancel();
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              backgroundColor: MainWidget.color,
               content: Text(
-                  "Duration: ${getDurationString(duration)}  Breaths: ${(duration.inMilliseconds / breath).round()}"),
+                  "Duration: ${getDurationString(duration)}  Breaths: ${(duration.inMilliseconds / breath).round()}\n\n\n"),
             ));
             vibrate();
           });
@@ -190,7 +195,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       _title = value;
       _status = getDurationString(const Duration(milliseconds: 0));
       switch (value) {
-        case PHYS_SIGH_TEXT:
+        case HomeWidget.physSigh:
           inhales[0] = INHALE_PS;
           inhales[1] = INHALE_HOLD_PS;
           inhales[2] = INHALE_LAST_PS;
@@ -231,31 +236,42 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Visibility(
             visible: !_isRunning,
             child: Text(_title,
-                style: const TextStyle(color: Colors.blue, fontSize: 12))),
+                style: const TextStyle(color: MainWidget.color, fontSize: 9))),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: <Widget>[
           Visibility(
             visible: !_isRunning,
             child: PopupMenuButton<String>(
+              elevation: 0,
               icon: const Icon(
                 Icons.more_vert,
-                color: Colors.blue,
+                color: MainWidget.color,
               ),
               onSelected: updatePreset,
               itemBuilder: (BuildContext context) {
                 return presets.map((String choice) {
                   return PopupMenuItem<String>(
                     value: choice,
-                    child: Text(choice),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(choice,
+                            style: const TextStyle(
+                              color: MainWidget.color,
+                            ))
+                      ],
+                    ),
                   );
                 }).toList();
               },
             ),
-          )
+          ),
+          const SizedBox(width: 35.0),
         ],
       ),
       extendBodyBehindAppBar: true,
@@ -269,8 +285,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                        width: 80.0,
-                        height: 80.0,
+                        width: 90.0,
+                        height: 90.0,
                         decoration: BoxDecoration(
                           color: Theme.of(context).primaryColor,
                           shape: BoxShape.circle,

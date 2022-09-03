@@ -1,6 +1,6 @@
 # Brethap Wear
 
-[Brethap](https://github.com/jithware/brethap) version for Wear OS.
+Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear OS.
 
 [<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
      alt="Get it on Google Play"
@@ -9,7 +9,11 @@
 
 ## Screenshots
 
-*TODO*
+![home](./screenshots/android/1_home.png)
+![inhale](./screenshots/android/2_inhale.png)
+![stats](./screenshots/android/3_stats.png)
+![presets](./screenshots/android/4_presets.png)
+![dark](./screenshots/android/5_dark.png)
 
 ## Usage
 
