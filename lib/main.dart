@@ -3,8 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 import 'package:brethap/constants.dart';
+import 'package:wear/wear.dart';
 
 void main() {
+  // Do not debugPrint in release
+  bool isInRelease = true;
+  assert(() {
+    isInRelease = false;
+    return true;
+  }());
+  if (isInRelease) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
   runApp(const MainWidget());
 }
 
@@ -234,88 +244,97 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Visibility(
-            visible: !_isRunning,
-            child: Text(_title,
-                style: const TextStyle(color: MainWidget.color, fontSize: 9))),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: <Widget>[
-          Visibility(
-            visible: !_isRunning,
-            child: PopupMenuButton<String>(
-              elevation: 0,
-              icon: const Icon(
-                Icons.more_vert,
-                color: MainWidget.color,
-              ),
-              onSelected: updatePreset,
-              itemBuilder: (BuildContext context) {
-                return presets.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(choice,
-                            style: const TextStyle(
-                              color: MainWidget.color,
-                            ))
-                      ],
-                    ),
-                  );
-                }).toList();
-              },
-            ),
-          ),
-          const SizedBox(width: 35.0),
-        ],
-      ),
-      extendBodyBehindAppBar: true,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Center(
-                child: Transform.scale(
-                    scale: _scale,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        width: 90.0,
-                        height: 90.0,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ))),
-            Text(
-              _status,
-            ),
-            ElevatedButton(
-                style: ButtonStyle(
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
+    return WatchShape(
+      builder: (BuildContext context, WearShape shape, Widget? child) {
+        debugPrint("Watch shape: $shape");
+        double padding = 0.0, fontSize = 12.0;
+        if (shape == WearShape.round) {
+          padding = 35.0;
+          fontSize = 9.0;
+        }
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            title: Visibility(
+                visible: !_isRunning,
+                child: Text(_title,
+                    style: TextStyle(
+                        color: MainWidget.color, fontSize: fontSize))),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            actions: <Widget>[
+              Visibility(
+                visible: !_isRunning,
+                child: PopupMenuButton<String>(
+                  elevation: 0,
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: MainWidget.color,
                   ),
-                )),
-                onPressed: () {
-                  setState(() {
-                    buttonPressed();
-                  });
-                },
-                child: _isRunning
-                    ? const Text(
-                        "Stop",
-                      )
-                    : const Text("Start"))
-          ],
-        ),
-      ),
+                  onSelected: updatePreset,
+                  itemBuilder: (BuildContext context) {
+                    return presets.map((String choice) {
+                      return PopupMenuItem<String>(
+                        value: choice,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(choice,
+                                style: const TextStyle(
+                                  color: MainWidget.color,
+                                ))
+                          ],
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
+              SizedBox(width: padding), // moves menu to left
+            ],
+          ),
+          extendBodyBehindAppBar: true,
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Center(
+                  child: Transform.scale(
+                      scale: _scale,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          width: 90.0,
+                          height: 90.0,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ))),
+              Text(
+                _status,
+              ),
+              ElevatedButton(
+                  style: ButtonStyle(
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  )),
+                  onPressed: () {
+                    setState(() {
+                      buttonPressed();
+                    });
+                  },
+                  child: _isRunning
+                      ? const Text(
+                          "Stop",
+                        )
+                      : const Text("Start"))
+            ],
+          ),
+        );
+      },
     );
   }
 }
