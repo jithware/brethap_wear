@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
 import 'package:brethap/constants.dart';
 
 void main() {
@@ -25,17 +26,18 @@ class MainWidget extends StatelessWidget {
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({Key? key, required this.title}) : super(key: key);
-
   final String title;
+
+  static String appName = "Brethap";
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
 }
 
 class _HomeWidgetState extends State<HomeWidget> {
-  bool _isRunning = false;
+  bool _isRunning = false, _hasVibrate = false, _vibrate = false;
   double _scale = 0.0;
-  String _title = "", _preset = "";
+  String _title = "", _status = "";
   List<int> inhales = [0, 0, 0];
   List<int> exhales = [0, 0, 0];
 
@@ -49,7 +51,13 @@ class _HomeWidgetState extends State<HomeWidget> {
   @override
   initState() {
     debugPrint("$widget.initState");
+
+    // Set default preset
     updatePreset(DEFAULT_TEXT);
+
+    // Check for vibration
+    hasVibrate();
+
     super.initState();
   }
 
@@ -62,6 +70,26 @@ class _HomeWidgetState extends State<HomeWidget> {
   String getDurationString(Duration duration) {
     String dur = duration.toString();
     return dur.substring(0, dur.indexOf('.'));
+  }
+
+  Future<void> hasVibrate() async {
+    try {
+      _hasVibrate = await Vibration.hasVibrator() ?? false;
+      if (_hasVibrate) {
+        _hasVibrate = await Vibration.hasCustomVibrationsSupport() ?? false;
+      }
+      _vibrate = _hasVibrate;
+    } catch (e) {
+      debugPrint(e.toString());
+      _hasVibrate = _vibrate = false;
+    }
+  }
+
+  Future<void> vibrate() async {
+    debugPrint("$widget.vibrate");
+    if (_hasVibrate && _vibrate) {
+      await Vibration.vibrate(duration: 50);
+    }
   }
 
   void buttonPressed() {
@@ -87,12 +115,13 @@ class _HomeWidgetState extends State<HomeWidget> {
           setState(() {
             _isRunning = false;
             _scale = 0.0;
-            _title = _preset;
+            _status = getDurationString(const Duration(milliseconds: 0));
             timer.cancel();
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(
                   "Duration: ${getDurationString(duration)}  Breaths: ${(duration.inMilliseconds / breath).round()}"),
             ));
+            vibrate();
           });
         } else {
           setState(() {
@@ -100,23 +129,29 @@ class _HomeWidgetState extends State<HomeWidget> {
               inhaling = true;
               exhaling = false;
               _scale = 0.0;
+              vibrate();
             } else if (inhales[1] > 0 && cycle == inhales[0]) {
               inhaling = false;
               exhaling = false;
+              vibrate();
             } else if (inhales[2] > 0 && cycle == inhales[0] + inhales[1]) {
               inhaling = true;
               exhaling = false;
+              vibrate();
             } else if (cycle == inhale) {
               inhaling = false;
               exhaling = true;
               _scale = 1.0;
+              vibrate();
             } else if (exhales[1] > 0 && cycle == inhale + exhales[0]) {
               inhaling = false;
               exhaling = false;
+              vibrate();
             } else if (exhales[2] > 0 &&
                 cycle == inhale + exhales[0] + exhales[1]) {
               inhaling = false;
               exhaling = true;
+              vibrate();
             }
 
             cycle += timerSpan.inMilliseconds;
@@ -137,7 +172,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             }
 
             duration += Duration(milliseconds: timerSpan.inMilliseconds);
-            _title = getDurationString(duration);
+            _status = getDurationString(duration);
           });
         }
 
@@ -152,7 +187,8 @@ class _HomeWidgetState extends State<HomeWidget> {
 
     setState(() {
       _isRunning = false;
-      _preset = _title = value;
+      _title = value;
+      _status = getDurationString(const Duration(milliseconds: 0));
       switch (value) {
         case PHYS_SIGH_TEXT:
           inhales[0] = INHALE_PS;
@@ -179,7 +215,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           exhales[2] = 0;
           break;
         default:
-          _preset = _title = "Brethap";
+          _title = HomeWidget.appName;
           inhales[0] = INHALE;
           inhales[1] = 0;
           inhales[2] = 0;
@@ -195,24 +231,31 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Visibility(
+            visible: !_isRunning,
+            child: Text(_title,
+                style: const TextStyle(color: Colors.blue, fontSize: 12))),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: <Widget>[
-          PopupMenuButton<String>(
-            icon: const Icon(
-              Icons.more_vert,
-              color: Colors.blue,
+          Visibility(
+            visible: !_isRunning,
+            child: PopupMenuButton<String>(
+              icon: const Icon(
+                Icons.more_vert,
+                color: Colors.blue,
+              ),
+              onSelected: updatePreset,
+              itemBuilder: (BuildContext context) {
+                return presets.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
             ),
-            onSelected: updatePreset,
-            itemBuilder: (BuildContext context) {
-              return presets.map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
-            },
-          ),
+          )
         ],
       ),
       extendBodyBehindAppBar: true,
@@ -220,9 +263,6 @@ class _HomeWidgetState extends State<HomeWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              _title,
-            ),
             Center(
                 child: Transform.scale(
                     scale: _scale,
@@ -237,6 +277,9 @@ class _HomeWidgetState extends State<HomeWidget> {
                         ),
                       ),
                     ))),
+            Text(
+              _status,
+            ),
             ElevatedButton(
                 style: ButtonStyle(
                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
