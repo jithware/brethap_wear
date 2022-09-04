@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 import 'package:brethap/constants.dart';
 import 'package:wear/wear.dart';
+import 'package:watch_connectivity/watch_connectivity.dart';
 
 void main() {
   // Do not debugPrint in release
@@ -52,8 +53,9 @@ class _HomeWidgetState extends State<HomeWidget> {
   bool _isRunning = false, _hasVibrate = false, _vibrate = false;
   double _scale = 0.0;
   String _title = "", _status = "";
-  List<int> inhales = [0, 0, 0];
-  List<int> exhales = [0, 0, 0];
+  final List<int> _inhales = [0, 0, 0];
+  final List<int> _exhales = [0, 0, 0];
+  final WatchConnectivity _watch = WatchConnectivity();
 
   final List<String> presets = [
     HomeWidget.physSigh,
@@ -72,6 +74,9 @@ class _HomeWidgetState extends State<HomeWidget> {
     // Check for vibration
     hasVibrate();
 
+    // Init phone communication
+    initWear();
+
     super.initState();
   }
 
@@ -79,6 +84,12 @@ class _HomeWidgetState extends State<HomeWidget> {
   void dispose() {
     debugPrint("$widget.dispose");
     super.dispose();
+  }
+
+  void initWear() {
+    _watch.messageStream.listen((msg) => setState(() {
+          debugPrint('Received message: $msg');
+        }));
   }
 
   String getDurationString(Duration duration) {
@@ -106,6 +117,11 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
+  void send(message) {
+    debugPrint("Sent message: $message");
+    _watch.sendMessage(message);
+  }
+
   void buttonPressed() {
     debugPrint("$widget.buttonPressed");
 
@@ -113,17 +129,19 @@ class _HomeWidgetState extends State<HomeWidget> {
       _isRunning = false;
     } else {
       _isRunning = true;
-
       Duration timerSpan = const Duration(milliseconds: 100);
       Duration duration = const Duration(milliseconds: 0);
-      int inhale = inhales[0] + inhales[1] + inhales[2];
-      int exhale = exhales[0] + exhales[1] + exhales[2];
+      int inhale = _inhales[0] + _inhales[1] + _inhales[2];
+      int exhale = _exhales[0] + _exhales[1] + _exhales[2];
       int breath = inhale + exhale;
       int cycle = 0;
-      double inhaleScale = timerSpan.inMilliseconds / (inhales[0] + inhales[2]);
-      double exhaleScale = timerSpan.inMilliseconds / (exhales[0] + exhales[2]);
+      double inhaleScale =
+          timerSpan.inMilliseconds / (_inhales[0] + _inhales[2]);
+      double exhaleScale =
+          timerSpan.inMilliseconds / (_exhales[0] + _exhales[2]);
       bool inhaling = true, exhaling = false;
 
+      DateTime start = DateTime.now();
       Timer.periodic(timerSpan, (Timer timer) {
         if (!_isRunning) {
           setState(() {
@@ -131,12 +149,18 @@ class _HomeWidgetState extends State<HomeWidget> {
             _scale = 0.0;
             _status = getDurationString(const Duration(milliseconds: 0));
             timer.cancel();
+            int breaths = (duration.inMilliseconds / breath).round();
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               backgroundColor: MainWidget.color,
               content: Text(
-                  "Duration: ${getDurationString(duration)}  Breaths: ${(duration.inMilliseconds / breath).round()}\n\n\n"),
+                  "Duration: ${getDurationString(duration)}  Breaths: $breaths\n\n"),
             ));
             vibrate();
+            send({
+              'start': start.millisecondsSinceEpoch,
+              'end': start.add(duration).millisecondsSinceEpoch,
+              'breaths': breaths
+            });
           });
         } else {
           setState(() {
@@ -145,11 +169,11 @@ class _HomeWidgetState extends State<HomeWidget> {
               exhaling = false;
               _scale = 0.0;
               vibrate();
-            } else if (inhales[1] > 0 && cycle == inhales[0]) {
+            } else if (_inhales[1] > 0 && cycle == _inhales[0]) {
               inhaling = false;
               exhaling = false;
               vibrate();
-            } else if (inhales[2] > 0 && cycle == inhales[0] + inhales[1]) {
+            } else if (_inhales[2] > 0 && cycle == _inhales[0] + _inhales[1]) {
               inhaling = true;
               exhaling = false;
               vibrate();
@@ -158,12 +182,12 @@ class _HomeWidgetState extends State<HomeWidget> {
               exhaling = true;
               _scale = 1.0;
               vibrate();
-            } else if (exhales[1] > 0 && cycle == inhale + exhales[0]) {
+            } else if (_exhales[1] > 0 && cycle == inhale + _exhales[0]) {
               inhaling = false;
               exhaling = false;
               vibrate();
-            } else if (exhales[2] > 0 &&
-                cycle == inhale + exhales[0] + exhales[1]) {
+            } else if (_exhales[2] > 0 &&
+                cycle == inhale + _exhales[0] + _exhales[1]) {
               inhaling = false;
               exhaling = true;
               vibrate();
@@ -206,37 +230,37 @@ class _HomeWidgetState extends State<HomeWidget> {
       _status = getDurationString(const Duration(milliseconds: 0));
       switch (value) {
         case HomeWidget.physSigh:
-          inhales[0] = INHALE_PS;
-          inhales[1] = INHALE_HOLD_PS;
-          inhales[2] = INHALE_LAST_PS;
-          exhales[0] = EXHALE_PS;
-          exhales[1] = 0;
-          exhales[2] = 0;
+          _inhales[0] = INHALE_PS;
+          _inhales[1] = INHALE_HOLD_PS;
+          _inhales[2] = INHALE_LAST_PS;
+          _exhales[0] = EXHALE_PS;
+          _exhales[1] = 0;
+          _exhales[2] = 0;
           break;
         case PRESET_478_TEXT:
-          inhales[0] = INHALE_478;
-          inhales[1] = INHALE_HOLD_478;
-          inhales[2] = 0;
-          exhales[0] = EXHALE_478;
-          exhales[1] = 0;
-          exhales[2] = 0;
+          _inhales[0] = INHALE_478;
+          _inhales[1] = INHALE_HOLD_478;
+          _inhales[2] = 0;
+          _exhales[0] = EXHALE_478;
+          _exhales[1] = 0;
+          _exhales[2] = 0;
           break;
         case BOX_TEXT:
-          inhales[0] = INHALE_BOX;
-          inhales[1] = INHALE_HOLD_BOX;
-          inhales[2] = 0;
-          exhales[0] = EXHALE_BOX;
-          exhales[1] = EXHALE_HOLD_BOX;
-          exhales[2] = 0;
+          _inhales[0] = INHALE_BOX;
+          _inhales[1] = INHALE_HOLD_BOX;
+          _inhales[2] = 0;
+          _exhales[0] = EXHALE_BOX;
+          _exhales[1] = EXHALE_HOLD_BOX;
+          _exhales[2] = 0;
           break;
         default:
           _title = HomeWidget.appName;
-          inhales[0] = INHALE;
-          inhales[1] = 0;
-          inhales[2] = 0;
-          exhales[0] = EXHALE;
-          exhales[1] = 0;
-          exhales[2] = 0;
+          _inhales[0] = INHALE;
+          _inhales[1] = 0;
+          _inhales[2] = 0;
+          _exhales[0] = EXHALE;
+          _exhales[1] = 0;
+          _exhales[2] = 0;
           break;
       }
     });
@@ -246,7 +270,6 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget build(BuildContext context) {
     return WatchShape(
       builder: (BuildContext context, WearShape shape, Widget? child) {
-        debugPrint("Watch shape: $shape");
         double padding = 0.0, fontSize = 12.0;
         if (shape == WearShape.round) {
           padding = 35.0;

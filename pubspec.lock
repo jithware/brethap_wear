@@ -609,6 +609,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.2.0"
+  watch_connectivity:
+    dependency: "direct main"
+    description:
+      name: watch_connectivity
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.3"
+  watch_connectivity_platform_interface:
+    dependency: transitive
+    description:
+      name: watch_connectivity_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.1"
   wear:
     dependency: "direct main"
     description:
