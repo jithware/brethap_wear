@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:brethap/hive_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 import 'package:brethap/constants.dart';
@@ -42,25 +43,26 @@ class HomeWidget extends StatefulWidget {
   const HomeWidget({Key? key, required this.title}) : super(key: key);
   final String title;
 
-  static const String appName = "Brethap";
-  static const String physSigh = "Physio Sigh";
+  static const String appName = "Brethap", phonePreference = "Phone Preference";
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
 }
 
 class _HomeWidgetState extends State<HomeWidget> {
+  Duration _duration = const Duration(seconds: 0);
   bool _isRunning = false, _hasVibrate = false, _vibrate = false;
   double _scale = 0.0;
   String _title = "", _status = "";
-  final List<int> _inhales = [0, 0, 0];
-  final List<int> _exhales = [0, 0, 0];
+  Preference? _phonePreference;
+  Preference _preference = Preference.getDefaultPref();
   final WatchConnectivity _watch = WatchConnectivity();
 
   final List<String> presets = [
-    HomeWidget.physSigh,
+    HomeWidget.phonePreference,
     PRESET_478_TEXT,
     BOX_TEXT,
+    PHYS_SIGH_TEXT,
     DEFAULT_TEXT,
   ];
 
@@ -86,15 +88,34 @@ class _HomeWidgetState extends State<HomeWidget> {
     super.dispose();
   }
 
+  // For phone pairing see:
+  // https://developer.android.com/training/wearables/get-started/creating#pair-phone-with-avd
   void initWear() {
-    _watch.messageStream.listen((msg) => setState(() {
-          debugPrint('Received message: $msg');
+    _watch.messageStream.listen((message) => setState(() {
+          debugPrint('Received message: $message');
+          if (Preference.isPreference(message)) {
+            _phonePreference = Preference.fromJson(message);
+            updatePreset(HomeWidget.phonePreference);
+          }
         }));
+
+    // request the running preference from phone
+    send({"preference": 0});
   }
 
   String getDurationString(Duration duration) {
     String dur = duration.toString();
+    if (duration.isNegative) {
+      dur = Duration.zero.toString();
+    }
     return dur.substring(0, dur.indexOf('.'));
+  }
+
+  Duration roundDuration(Duration duration) {
+    if (duration.inMilliseconds / 1000 == duration.inSeconds) {
+      return duration;
+    }
+    return Duration(seconds: duration.inSeconds + 1);
   }
 
   Future<void> hasVibrate() async {
@@ -110,10 +131,10 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
-  Future<void> vibrate() async {
-    debugPrint("$widget.vibrate");
-    if (_hasVibrate && _vibrate) {
-      await Vibration.vibrate(duration: 50);
+  Future<void> vibrate(int duration) async {
+    debugPrint("$widget.vibrate($duration)");
+    if (_hasVibrate && _vibrate && duration > 0) {
+      await Vibration.vibrate(duration: duration);
     }
   }
 
@@ -131,36 +152,38 @@ class _HomeWidgetState extends State<HomeWidget> {
       _isRunning = true;
       Duration timerSpan = const Duration(milliseconds: 100);
       Duration duration = const Duration(milliseconds: 0);
-      int inhale = _inhales[0] + _inhales[1] + _inhales[2];
-      int exhale = _exhales[0] + _exhales[1] + _exhales[2];
+      int inhale =
+          _preference.inhale[0] + _preference.inhale[1] + _preference.inhale[2];
+      int exhale =
+          _preference.exhale[0] + _preference.exhale[1] + _preference.exhale[2];
       int breath = inhale + exhale;
       int cycle = 0;
-      double inhaleScale =
-          timerSpan.inMilliseconds / (_inhales[0] + _inhales[2]);
-      double exhaleScale =
-          timerSpan.inMilliseconds / (_exhales[0] + _exhales[2]);
+      double inhaleScale = timerSpan.inMilliseconds /
+          (_preference.inhale[0] + _preference.inhale[2]);
+      double exhaleScale = timerSpan.inMilliseconds /
+          (_preference.exhale[0] + _preference.exhale[2]);
       bool inhaling = true, exhaling = false;
 
       DateTime start = DateTime.now();
       Timer.periodic(timerSpan, (Timer timer) {
-        if (!_isRunning) {
+        if (!_isRunning ||
+            (duration.inSeconds >= _duration.inSeconds && cycle <= 0)) {
           setState(() {
             _isRunning = false;
             _scale = 0.0;
-            _status = getDurationString(const Duration(milliseconds: 0));
+            _status = getDurationString(_duration);
             timer.cancel();
+            vibrate(_preference.vibrateDuration);
             int breaths = (duration.inMilliseconds / breath).round();
+            Session session = Session(start: start);
+            session.end = start.add(duration);
+            session.breaths = breaths;
+            send(session.toJson());
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               backgroundColor: MainWidget.color,
               content: Text(
-                  "Duration: ${getDurationString(duration)}  Breaths: $breaths\n\n"),
+                  "Duration: ${getDurationString(roundDuration(session.end.difference(session.start)))}  Breaths: $breaths\n\n"),
             ));
-            vibrate();
-            send({
-              'start': start.millisecondsSinceEpoch,
-              'end': start.add(duration).millisecondsSinceEpoch,
-              'breaths': breaths
-            });
           });
         } else {
           setState(() {
@@ -168,29 +191,33 @@ class _HomeWidgetState extends State<HomeWidget> {
               inhaling = true;
               exhaling = false;
               _scale = 0.0;
-              vibrate();
-            } else if (_inhales[1] > 0 && cycle == _inhales[0]) {
+              vibrate(_preference.vibrateBreath);
+            } else if (_preference.inhale[1] > 0 &&
+                cycle == _preference.inhale[0]) {
               inhaling = false;
               exhaling = false;
-              vibrate();
-            } else if (_inhales[2] > 0 && cycle == _inhales[0] + _inhales[1]) {
+              vibrate(_preference.vibrateBreath);
+            } else if (_preference.inhale[2] > 0 &&
+                cycle == _preference.inhale[0] + _preference.inhale[1]) {
               inhaling = true;
               exhaling = false;
-              vibrate();
+              vibrate(_preference.vibrateBreath);
             } else if (cycle == inhale) {
               inhaling = false;
               exhaling = true;
               _scale = 1.0;
-              vibrate();
-            } else if (_exhales[1] > 0 && cycle == inhale + _exhales[0]) {
+              vibrate(_preference.vibrateBreath);
+            } else if (_preference.exhale[1] > 0 &&
+                cycle == inhale + _preference.exhale[0]) {
               inhaling = false;
               exhaling = false;
-              vibrate();
-            } else if (_exhales[2] > 0 &&
-                cycle == inhale + _exhales[0] + _exhales[1]) {
+              vibrate(_preference.vibrateBreath);
+            } else if (_preference.exhale[2] > 0 &&
+                cycle ==
+                    inhale + _preference.exhale[0] + _preference.exhale[1]) {
               inhaling = false;
               exhaling = true;
-              vibrate();
+              vibrate(_preference.vibrateBreath);
             }
 
             cycle += timerSpan.inMilliseconds;
@@ -211,58 +238,56 @@ class _HomeWidgetState extends State<HomeWidget> {
             }
 
             duration += Duration(milliseconds: timerSpan.inMilliseconds);
-            _status = getDurationString(duration);
+            _status = getDurationString(_duration - duration);
           });
         }
 
         debugPrint(
-            "duration: $duration  breaths: ${duration.inMilliseconds / breath}  scale: $_scale  cycle: $cycle");
+            "duration: $duration  breaths: ${(duration.inMilliseconds / breath).toStringAsFixed(3)} scale: ${_scale.toStringAsFixed(3)} cycle: $cycle");
       });
     }
   }
 
-  void updatePreset(String value) {
-    debugPrint("$widget.updatePreset");
+  Future<void> updatePreset(String value) async {
+    debugPrint("$widget.updatePreset($value)");
 
     setState(() {
       _isRunning = false;
-      _title = value;
-      _status = getDurationString(const Duration(milliseconds: 0));
       switch (value) {
-        case HomeWidget.physSigh:
-          _inhales[0] = INHALE_PS;
-          _inhales[1] = INHALE_HOLD_PS;
-          _inhales[2] = INHALE_LAST_PS;
-          _exhales[0] = EXHALE_PS;
-          _exhales[1] = 0;
-          _exhales[2] = 0;
+        case HomeWidget.phonePreference:
+          if (_phonePreference != null) {
+            _preference = _phonePreference!;
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              backgroundColor: MainWidget.color,
+              content:
+                  Text("Not paired to ${HomeWidget.appName} phone app\n\n"),
+            ));
+          }
           break;
         case PRESET_478_TEXT:
-          _inhales[0] = INHALE_478;
-          _inhales[1] = INHALE_HOLD_478;
-          _inhales[2] = 0;
-          _exhales[0] = EXHALE_478;
-          _exhales[1] = 0;
-          _exhales[2] = 0;
+          _preference = Preference.get478Pref();
           break;
         case BOX_TEXT:
-          _inhales[0] = INHALE_BOX;
-          _inhales[1] = INHALE_HOLD_BOX;
-          _inhales[2] = 0;
-          _exhales[0] = EXHALE_BOX;
-          _exhales[1] = EXHALE_HOLD_BOX;
-          _exhales[2] = 0;
+          _preference = Preference.getBoxPref();
+          break;
+        case PHYS_SIGH_TEXT:
+          _preference = Preference.getPhysSighPref();
+          break;
+        case DEFAULT_TEXT:
+          _preference = Preference.getDefaultPref();
           break;
         default:
-          _title = HomeWidget.appName;
-          _inhales[0] = INHALE;
-          _inhales[1] = 0;
-          _inhales[2] = 0;
-          _exhales[0] = EXHALE;
-          _exhales[1] = 0;
-          _exhales[2] = 0;
+          _preference = Preference.getDefaultPref();
           break;
       }
+
+      _title = _preference.name;
+      if (_title.isEmpty) {
+        _title = HomeWidget.appName;
+      }
+      _duration = Duration(seconds: _preference.duration);
+      _status = getDurationString(_duration);
     });
   }
 
@@ -272,7 +297,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       builder: (BuildContext context, WearShape shape, Widget? child) {
         double padding = 0.0, fontSize = 12.0;
         if (shape == WearShape.round) {
-          padding = 35.0;
+          padding = 25.0;
           fontSize = 9.0;
         }
         return Scaffold(

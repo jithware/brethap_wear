@@ -41,10 +41,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "03b243862cabca4947dfdcd52672882d98b2182f"
+      resolved-ref: bd4f13dc0ed0a83c821b3653e37823f45f460993
       url: "https://github.com/jithware/brethap.git"
     source: git
-    version: "1.6.2+38"
+    version: "1.6.3+41"
   characters:
     dependency: transitive
     description:
