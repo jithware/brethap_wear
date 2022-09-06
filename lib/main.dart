@@ -1,11 +1,12 @@
 import 'dart:async';
-
-import 'package:brethap/hive_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
-import 'package:brethap/constants.dart';
 import 'package:wear/wear.dart';
 import 'package:watch_connectivity/watch_connectivity.dart';
+
+import 'package:brethap/hive_storage.dart';
+import 'package:brethap/wear.dart';
+import 'package:brethap/constants.dart';
 
 void main() {
   // Do not debugPrint in release
@@ -51,7 +52,7 @@ class HomeWidget extends StatefulWidget {
 
 class _HomeWidgetState extends State<HomeWidget> {
   Duration _duration = const Duration(seconds: 0);
-  bool _isRunning = false, _hasVibrate = false, _vibrate = false;
+  bool _isRunning = false, _hasVibrate = false;
   double _scale = 0.0;
   String _title = "", _status = "";
   Preference? _phonePreference;
@@ -70,11 +71,11 @@ class _HomeWidgetState extends State<HomeWidget> {
   initState() {
     debugPrint("$widget.initState");
 
-    // Set default preset
-    updatePreset(DEFAULT_TEXT);
+    // Set default preference
+    updatePreference(DEFAULT_TEXT);
 
-    // Check for vibration
-    hasVibrate();
+    // Init vibration
+    initVibrate();
 
     // Init phone communication
     initWear();
@@ -95,45 +96,29 @@ class _HomeWidgetState extends State<HomeWidget> {
           debugPrint('Received message: $message');
           if (Preference.isPreference(message)) {
             _phonePreference = Preference.fromJson(message);
-            updatePreset(HomeWidget.phonePreference);
+            updatePreference(HomeWidget.phonePreference);
           }
         }));
 
-    // request the running preference from phone
+    // request the current preference from phone
     send({"preference": 0});
   }
 
-  String getDurationString(Duration duration) {
-    String dur = duration.toString();
-    if (duration.isNegative) {
-      dur = Duration.zero.toString();
-    }
-    return dur.substring(0, dur.indexOf('.'));
-  }
-
-  Duration roundDuration(Duration duration) {
-    if (duration.inMilliseconds / 1000 == duration.inSeconds) {
-      return duration;
-    }
-    return Duration(seconds: duration.inSeconds + 1);
-  }
-
-  Future<void> hasVibrate() async {
+  Future<void> initVibrate() async {
     try {
       _hasVibrate = await Vibration.hasVibrator() ?? false;
       if (_hasVibrate) {
         _hasVibrate = await Vibration.hasCustomVibrationsSupport() ?? false;
       }
-      _vibrate = _hasVibrate;
     } catch (e) {
       debugPrint(e.toString());
-      _hasVibrate = _vibrate = false;
+      _hasVibrate = false;
     }
   }
 
   Future<void> vibrate(int duration) async {
     debugPrint("$widget.vibrate($duration)");
-    if (_hasVibrate && _vibrate && duration > 0) {
+    if (_hasVibrate && duration > 0) {
       await Vibration.vibrate(duration: duration);
     }
   }
@@ -176,7 +161,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             vibrate(_preference.vibrateDuration);
             int breaths = (duration.inMilliseconds / breath).round();
             Session session = Session(start: start);
-            session.end = start.add(duration);
+            session.end = DateTime.now();
             session.breaths = breaths;
             send(session.toJson());
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -248,8 +233,8 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
-  Future<void> updatePreset(String value) async {
-    debugPrint("$widget.updatePreset($value)");
+  Future<void> updatePreference(String value) async {
+    debugPrint("$widget.updatePreference($value)");
 
     setState(() {
       _isRunning = false;
@@ -319,7 +304,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     Icons.more_vert,
                     color: MainWidget.color,
                   ),
-                  onSelected: updatePreset,
+                  onSelected: updatePreference,
                   itemBuilder: (BuildContext context) {
                     return presets.map((String choice) {
                       return PopupMenuItem<String>(
