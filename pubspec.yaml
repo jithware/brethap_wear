@@ -54,6 +54,8 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
   flutter_launcher_icons: ^0.10.0
+  integration_test:
+    sdk: flutter
 
 # To build launcher icons run: flutter pub run flutter_launcher_icons:main
 flutter_icons:

@@ -28,6 +28,7 @@ class MainWidget extends StatelessWidget {
   const MainWidget({Key? key}) : super(key: key);
 
   static const Color color = Colors.blue;
+  static const String title = "Brethap for Wear OS";
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +39,7 @@ class MainWidget extends StatelessWidget {
       // To change device to dark mode run: adb shell "cmd uimode night yes"
       darkTheme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      home: const HomeWidget(title: 'Brethap for Wear OS'),
+      home: const HomeWidget(title: title),
     );
   }
 }

@@ -25,5 +25,18 @@
             "program": "./lib/main.dart",
             "flutterMode": "release"
         },
+        {
+            "name": "test",
+            "type": "dart",
+            "request": "launch",
+            "program": "./test/"
+        },
+        {
+            "name": "integration test",
+            "type": "dart",
+            "request": "launch",
+            "program": "./integration_test/app_test.dart",
+            "flutterMode": "debug",
+        },
     ]
 }
