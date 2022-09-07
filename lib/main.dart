@@ -1,3 +1,6 @@
+// Packaging requires Multiple APK support see:
+// https://developer.android.com/training/wearables/packaging
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
@@ -89,7 +92,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     super.dispose();
   }
 
-  // For phone pairing see:
+  // To pair phone for testing see:
   // https://developer.android.com/training/wearables/get-started/creating#pair-phone-with-avd
   void initWear() {
     _watch.messageStream.listen((message) => setState(() {

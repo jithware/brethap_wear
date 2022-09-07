@@ -1,3 +1,0 @@
-Wear OS release version: 1.0.1+42
-* Add communication between Wear OS and Phone
-* Minor enhancements

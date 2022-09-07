@@ -48,13 +48,11 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    // https://docs.flutter.dev/deployment/android#reviewing-the-build-configuration
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.jithware.brethap"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-build-configuration.
         minSdkVersion 23
-        targetSdkVersion flutter.targetSdkVersion
+        targetSdkVersion 31
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
