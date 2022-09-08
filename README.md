@@ -12,9 +12,10 @@ Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear 
 ![home](fastlane/metadata/android/en-US/images/wearScreenshots/1_home.png)
 ![inhale](fastlane/metadata/android/en-US/images/wearScreenshots/2_inhale.png)
 ![stats](fastlane/metadata/android/en-US/images/wearScreenshots/3_stats.png)
-![presets](fastlane/metadata/android/en-US/images/wearScreenshots/4_presets.png)
-![dark](fastlane/metadata/android/en-US/images/wearScreenshots/5_dark.png)
+![presets1](fastlane/metadata/android/en-US/images/wearScreenshots/4_presets1.png)
+![presets2](fastlane/metadata/android/en-US/images/wearScreenshots/5_presets2.png)
 ![custom](fastlane/metadata/android/en-US/images/wearScreenshots/6_custom.png)
+![dark](fastlane/metadata/android/en-US/images/wearScreenshots/7_dark.png)
 
 ## Usage
 
