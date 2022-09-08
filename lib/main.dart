@@ -56,7 +56,10 @@ class HomeWidget extends StatefulWidget {
 
 class _HomeWidgetState extends State<HomeWidget> {
   Duration _duration = const Duration(seconds: 0);
-  bool _isRunning = false, _hasVibrate = false;
+  bool _isRunning = false,
+      _hasVibrate = false,
+      _connected = false,
+      _sync = true;
   double _scale = 0.0;
   String _title = "", _status = "";
   Preference? _phonePreference;
@@ -98,7 +101,8 @@ class _HomeWidgetState extends State<HomeWidget> {
   void initWear() {
     _watch.messageStream.listen((message) => setState(() {
           debugPrint('Received message: $message');
-          if (Preference.isPreference(message)) {
+          _connected = true;
+          if (Preference.isPreference(message) && _sync) {
             _phonePreference = Preference.fromJson(message);
             updatePreference(HomeWidget.phonePreference);
           }
@@ -128,13 +132,16 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   void send(message) {
-    debugPrint("Sent message: $message");
-    _watch.sendMessage(message);
+    if (_sync) {
+      debugPrint("Sent message: $message");
+      _watch.sendMessage(message);
+    }
   }
 
   void buttonPressed() {
     debugPrint("$widget.buttonPressed");
 
+    _connected = false;
     if (_isRunning) {
       _isRunning = false;
     } else {
@@ -249,8 +256,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               backgroundColor: MainWidget.color,
-              content:
-                  Text("Not paired to ${HomeWidget.appName} phone app\n\n"),
+              content: Text("Not paired to phone\n\n\n"),
             ));
           }
           break;
@@ -284,13 +290,39 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget build(BuildContext context) {
     return WatchShape(
       builder: (BuildContext context, WearShape shape, Widget? child) {
-        double padding = 0.0, fontSize = 12.0;
+        double leftPad = 0.0, rightPad = 0.0, topPad = 0.0, fontSize = 12.0;
         if (shape == WearShape.round) {
-          padding = 25.0;
-          fontSize = 9.0;
+          leftPad = 40.0;
+          rightPad = 35.0;
+          topPad = 15.0;
         }
         return Scaffold(
           appBar: AppBar(
+            leading: Visibility(
+              visible: !_isRunning,
+              child: _connected && _sync
+                  ? IconButton(
+                      icon: const Icon(Icons.phonelink_ring,
+                          color: MainWidget.color),
+                      padding: EdgeInsets.only(left: leftPad, top: topPad),
+                      onPressed: () {
+                        setState(() {
+                          _sync = false;
+                        });
+                      },
+                    )
+                  : IconButton(
+                      icon:
+                          const Icon(Icons.phonelink_erase, color: Colors.grey),
+                      padding: EdgeInsets.only(left: leftPad, top: topPad),
+                      onPressed: () {
+                        setState(() {
+                          _sync = true;
+                          send({"preference": 0});
+                        });
+                      },
+                    ),
+            ),
             centerTitle: true,
             title: Visibility(
                 visible: !_isRunning,
@@ -304,10 +336,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                 visible: !_isRunning,
                 child: PopupMenuButton<String>(
                   elevation: 0,
-                  icon: const Icon(
-                    Icons.more_vert,
-                    color: MainWidget.color,
-                  ),
+                  padding: EdgeInsets.only(right: rightPad, top: topPad),
+                  icon: const Icon(Icons.more_vert, color: MainWidget.color),
                   onSelected: updatePreference,
                   itemBuilder: (BuildContext context) {
                     return presets.map((String choice) {
@@ -327,48 +357,57 @@ class _HomeWidgetState extends State<HomeWidget> {
                   },
                 ),
               ),
-              SizedBox(width: padding), // moves menu to left
             ],
           ),
           extendBodyBehindAppBar: true,
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Center(
-                  child: Transform.scale(
-                      scale: _scale,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          width: 90.0,
-                          height: 90.0,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            shape: BoxShape.circle,
+          body: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                // Text(_title,
+                //     style: TextStyle(
+                //         color: MainWidget.color,
+                //         fontSize: fontSize,
+                //         fontWeight: FontWeight.bold)),
+                Center(
+                    child: Transform.scale(
+                        scale: _scale,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            width: 90.0,
+                            height: 90.0,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                      ))),
-              Text(
-                _status,
-              ),
-              ElevatedButton(
-                  style: ButtonStyle(
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                  )),
-                  onPressed: () {
-                    setState(() {
-                      buttonPressed();
-                    });
-                  },
-                  child: _isRunning
-                      ? const Text(
-                          "Stop",
-                        )
-                      : const Text("Start"))
-            ],
+                        ))),
+                Text(
+                  _status,
+                ),
+                ElevatedButton(
+                    style: ButtonStyle(
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                    )),
+                    onPressed: () {
+                      setState(() {
+                        buttonPressed();
+                      });
+                    },
+                    child: _isRunning
+                        ? const Text(
+                            "Stop",
+                          )
+                        : const Text("Start"))
+              ],
+            ),
           ),
         );
       },
