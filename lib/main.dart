@@ -48,7 +48,9 @@ class HomeWidget extends StatefulWidget {
   const HomeWidget({Key? key, required this.title}) : super(key: key);
   final String title;
 
-  static const String appName = "Brethap", phonePreference = "Phone Preference";
+  static const String appName = "Brethap",
+      phonePreference = "Phone Preference",
+      keyTitle = "Title";
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -61,7 +63,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       _connected = false,
       _sync = true;
   double _scale = 0.0;
-  String _title = "", _status = "";
+  String _title = "", _timer = "";
   Preference? _phonePreference;
   Preference _preference = Preference.getDefaultPref();
   final WatchConnectivity _watch = WatchConnectivity();
@@ -167,7 +169,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           setState(() {
             _isRunning = false;
             _scale = 0.0;
-            _status = getDurationString(_duration);
+            _timer = getDurationString(_duration);
             timer.cancel();
             vibrate(_preference.vibrateDuration);
             int breaths = (duration.inMilliseconds / breath).round();
@@ -234,7 +236,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             }
 
             duration += Duration(milliseconds: timerSpan.inMilliseconds);
-            _status = getDurationString(_duration - duration);
+            _timer = getDurationString(_duration - duration);
           });
         }
 
@@ -282,7 +284,7 @@ class _HomeWidgetState extends State<HomeWidget> {
         _title = HomeWidget.appName;
       }
       _duration = Duration(seconds: _preference.duration);
-      _status = getDurationString(_duration);
+      _timer = getDurationString(_duration);
     });
   }
 
@@ -290,11 +292,16 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget build(BuildContext context) {
     return WatchShape(
       builder: (BuildContext context, WearShape shape, Widget? child) {
-        double leftPad = 0.0, rightPad = 0.0, topPad = 0.0, fontSize = 12.0;
+        double leftPad = 0.0,
+            rightPad = 0.0,
+            topPad = 0.0,
+            fontSize = 12.0,
+            prefWidth = 150;
         if (shape == WearShape.round) {
           leftPad = 40.0;
           rightPad = 35.0;
           topPad = 15.0;
+          prefWidth = 125;
         }
         return Scaffold(
           appBar: AppBar(
@@ -324,11 +331,18 @@ class _HomeWidgetState extends State<HomeWidget> {
                     ),
             ),
             centerTitle: true,
-            title: Visibility(
-                visible: !_isRunning,
-                child: Text(_title,
-                    style: TextStyle(
-                        color: MainWidget.color, fontSize: fontSize))),
+            title: GestureDetector(
+                key: const Key(HomeWidget.keyTitle),
+                onTap: () {
+                  setState(() {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  });
+                },
+                child: Visibility(
+                    visible: !_isRunning,
+                    child: Text(_title,
+                        style: TextStyle(
+                            color: MainWidget.color, fontSize: fontSize)))),
             backgroundColor: Colors.transparent,
             elevation: 0,
             actions: <Widget>[
@@ -338,19 +352,21 @@ class _HomeWidgetState extends State<HomeWidget> {
                   elevation: 0,
                   padding: EdgeInsets.only(right: rightPad, top: topPad),
                   icon: const Icon(Icons.more_vert, color: MainWidget.color),
-                  onSelected: updatePreference,
+                  onSelected: (value) {
+                    updatePreference(value);
+                  },
                   itemBuilder: (BuildContext context) {
                     return presets.map((String choice) {
                       return PopupMenuItem<String>(
                         value: choice,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(choice,
-                                style: const TextStyle(
-                                  color: MainWidget.color,
-                                ))
-                          ],
+                        child: SizedBox(
+                          width: prefWidth,
+                          child: Text(choice,
+                              key: Key(choice),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: MainWidget.color,
+                              )),
                         ),
                       );
                     }).toList();
@@ -362,15 +378,12 @@ class _HomeWidgetState extends State<HomeWidget> {
           extendBodyBehindAppBar: true,
           body: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+            onTap: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                // Text(_title,
-                //     style: TextStyle(
-                //         color: MainWidget.color,
-                //         fontSize: fontSize,
-                //         fontWeight: FontWeight.bold)),
                 Center(
                     child: Transform.scale(
                         scale: _scale,
@@ -386,7 +399,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                           ),
                         ))),
                 Text(
-                  _status,
+                  _timer,
                 ),
                 ElevatedButton(
                     style: ButtonStyle(

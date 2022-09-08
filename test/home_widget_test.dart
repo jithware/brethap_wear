@@ -5,10 +5,9 @@ import 'package:brethap_wear/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const Duration wait = Duration(seconds: 2);
+const Duration wait = Duration(seconds: 1);
 
 Future<void> testHomeWidget(WidgetTester tester) async {
-  const Duration shortWait = Duration(milliseconds: 500);
   Preference preference = Preference.getDefaultPref();
   Duration duration = Duration(seconds: preference.duration),
       totalTime = const Duration(),
@@ -31,8 +30,8 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   await tester.tap(find.byType(ElevatedButton));
 
   // Wait a bit
-  await tester.pump(shortWait);
-  totalTime += shortWait;
+  await tester.pump(wait);
+  totalTime += wait;
 
   // Verify button text
   expect(find.text("Stop"), findsOneWidget);
@@ -48,8 +47,8 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   expect(find.text(getDurationString(duration - totalTime)), findsOneWidget);
 
   // Wait a bit
-  await tester.pump(shortWait);
-  totalTime += shortWait;
+  await tester.pump(wait);
+  totalTime += wait;
 
   // Forward ahead to inhale
   await tester.pump(exhale);
@@ -59,71 +58,82 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   await tester.tap(find.byType(ElevatedButton));
 
   // Wait a bit
-  await tester.pump(shortWait);
-  totalTime += shortWait;
+  await tester.pump(wait);
+  totalTime += wait;
 
   // Verify reset timer text
   expect(find.text(getDurationString(duration)), findsOneWidget);
 
   // Verify session
-  await tester.pump(shortWait);
-  totalTime += shortWait;
+  await tester.pump(wait);
+  totalTime += wait;
   expect(find.byType(SnackBar), findsOneWidget);
 
+  // Tapping title closes snackbar
+  await tester.tap(find.byKey(const Key(HomeWidget.keyTitle)));
   await tester.pump(wait);
 
   // Tap presets
   await tester.tap(find.byType(PopupMenuButton<String>));
-  await tester.pump(shortWait);
+  await tester.pumpAndSettle();
 
   // Tap preset
   preference = Preference.get478Pref();
-  await tester.ensureVisible(find.text(PRESET_478_TEXT, skipOffstage: false));
-  await tester.tap(find.text(PRESET_478_TEXT));
-  await tester.pump(shortWait);
-  expect(
-      find.text(
-        getDurationString(Duration(seconds: preference.duration)),
-      ),
+  Finder finder = find.byKey(const Key(PRESET_478_TEXT));
+  expect(finder, findsOneWidget);
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+  expect(find.text(getDurationString(Duration(seconds: preference.duration))),
       findsOneWidget);
 
   // Tap presets
   await tester.tap(find.byType(PopupMenuButton<String>));
-  await tester.pump(shortWait);
+  await tester.pumpAndSettle();
 
   // Tap preset
   preference = Preference.getBoxPref();
-  await tester.ensureVisible(find.text(BOX_TEXT));
-  await tester.tap(find.text(BOX_TEXT));
-  await tester.pump(shortWait);
+  finder = find.byKey(const Key(BOX_TEXT));
+  expect(finder, findsOneWidget);
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
   expect(find.text(getDurationString(Duration(seconds: preference.duration))),
       findsOneWidget);
 
   // Tap presets
   await tester.tap(find.byType(PopupMenuButton<String>));
-  await tester.pump(shortWait);
+  await tester.pumpAndSettle();
 
   // Tap preset
   preference = Preference.getPhysSighPref();
-  await tester.ensureVisible(find.text(PHYS_SIGH_TEXT));
-  await tester.tap(find.text(PHYS_SIGH_TEXT));
-  await tester.pump(shortWait);
+  finder = find.byKey(const Key(PHYS_SIGH_TEXT));
+  expect(finder, findsOneWidget);
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
   expect(find.text(getDurationString(Duration(seconds: preference.duration))),
       findsOneWidget);
 
   // Tap presets
   await tester.tap(find.byType(PopupMenuButton<String>));
-  await tester.pump(shortWait);
+  await tester.pumpAndSettle();
 
   // Tap preset
   preference = Preference.getDefaultPref();
-  await tester.ensureVisible(find.text(DEFAULT_TEXT));
-  await tester.tap(find.text(DEFAULT_TEXT));
-  await tester.pump(shortWait);
+  finder = find.byKey(const Key(DEFAULT_TEXT));
+  expect(finder, findsOneWidget);
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
   expect(find.text(getDurationString(Duration(seconds: preference.duration))),
       findsOneWidget);
 
-  await tester.pumpAndSettle();
+  await tester.pump(wait);
 }
 
 Future<void> main() async {
