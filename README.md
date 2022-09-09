@@ -24,23 +24,20 @@ Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear 
 * To end a session, let the timer expire or press the Stop button
 
 [<img src="./screenshots/android/running.webp"
-     alt="Running"
-     height="400">](./screenshots/android/running.webp)
+     alt="Running">](./screenshots/android/running.webp)
 
 ### Presets
 * To select a preset, press the menu button and select the desired preset
 
 [<img src="./screenshots/android/presets.webp"
-     alt="Presets"
-     height="400">](./screenshots/android/presets.webp)
+     alt="Presets">](./screenshots/android/presets.webp)
 
 ### Custom
 * To select the custom preset, press the menu button and select Phone Preference. If you are not connected to the phone app, press the phone button to do so. The [Brethap](https://github.com/jithware/brethap) phone app must be installed on your phone and your watch setup with the [Wear OS App](https://support.google.com/wearos/answer/6056630).
 * To change the custom preset on your watch, open the Brethap [Preferences](https://github.com/jithware/brethap#preferences) on your phone and modify the preference.
 
 [<img src="./screenshots/android/custom.webp"
-     alt="Custom"
-     height="400">](./screenshots/android/custom.webp)
+     alt="Custom">](./screenshots/android/custom.webp)
 
 
 ## Donate
