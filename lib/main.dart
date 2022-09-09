@@ -11,7 +11,7 @@ import 'package:brethap/hive_storage.dart';
 import 'package:brethap/wear.dart';
 import 'package:brethap/constants.dart';
 
-void main() {
+Future<void> main() async {
   // Do not debugPrint in release
   bool isInRelease = true;
   assert(() {

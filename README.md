@@ -11,17 +11,37 @@ Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear 
 
 ![home](fastlane/metadata/android/en-US/images/wearScreenshots/1_home.png)
 ![inhale](fastlane/metadata/android/en-US/images/wearScreenshots/2_inhale.png)
-![stats](fastlane/metadata/android/en-US/images/wearScreenshots/3_stats.png)
-![presets1](fastlane/metadata/android/en-US/images/wearScreenshots/4_presets1.png)
-![presets2](fastlane/metadata/android/en-US/images/wearScreenshots/5_presets2.png)
+![duration](fastlane/metadata/android/en-US/images/wearScreenshots/3_duration.png)
+![preset1](fastlane/metadata/android/en-US/images/wearScreenshots/4_preset.png)
+![preset2](fastlane/metadata/android/en-US/images/wearScreenshots/5_preset.png)
 ![custom](fastlane/metadata/android/en-US/images/wearScreenshots/6_custom.png)
 ![dark](fastlane/metadata/android/en-US/images/wearScreenshots/7_dark.png)
 
 ## Usage
 
 ### Running
+* To start a session, press the Start button
+* To end a session, let the timer expire or press the Stop button
 
-*TODO*
+[<img src="./screenshots/android/running.webp"
+     alt="Running"
+     height="400">](./screenshots/android/running.webp)
+
+### Presets
+* To select a preset, press the menu button and select the desired preset
+
+[<img src="./screenshots/android/presets.webp"
+     alt="Presets"
+     height="400">](./screenshots/android/presets.webp)
+
+### Custom
+* To select the custom preset, press the menu button and select Phone Preference. If you are not connected to the phone app, press the phone button to do so. The [Brethap](https://github.com/jithware/brethap) phone app must be installed on your phone and your watch setup with the [Wear OS App](https://support.google.com/wearos/answer/6056630).
+* To change the custom preset on your watch, open the Brethap [Preferences](https://github.com/jithware/brethap#preferences) on your phone and modify the preference.
+
+[<img src="./screenshots/android/custom.webp"
+     alt="Custom"
+     height="400">](./screenshots/android/custom.webp)
+
 
 ## Donate
 

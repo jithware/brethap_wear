@@ -38,5 +38,12 @@
             "program": "./integration_test/app_test.dart",
             "flutterMode": "debug",
         },
+        {
+            "name": "demo",
+            "type": "dart",
+            "request": "launch",
+            "program": "./integration_test/demo_test.dart",
+            "flutterMode": "debug",
+        },
     ]
 }
