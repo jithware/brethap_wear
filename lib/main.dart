@@ -27,7 +27,6 @@ Future<void> main() async {
 class MainWidget extends StatelessWidget {
   const MainWidget({Key? key}) : super(key: key);
 
-  static const Color color = Colors.blue;
   static const String title = "Brethap for Wear OS";
 
   @override
@@ -178,7 +177,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             session.breaths = breaths;
             send(session.toJson());
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              backgroundColor: MainWidget.color,
+              backgroundColor: Theme.of(context).primaryColor,
               content: Text(
                   "Duration: ${getDurationString(roundDuration(session.end.difference(session.start)))}  Breaths: $breaths\n\n"),
             ));
@@ -256,9 +255,9 @@ class _HomeWidgetState extends State<HomeWidget> {
           if (_phonePreference != null) {
             _preference = _phonePreference!;
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              backgroundColor: MainWidget.color,
-              content: Text("Not paired to phone\n\n\n"),
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              backgroundColor: Theme.of(context).primaryColor,
+              content: const Text("Not paired to phone\n\n\n"),
             ));
           }
           break;
@@ -309,8 +308,8 @@ class _HomeWidgetState extends State<HomeWidget> {
               visible: !_isRunning,
               child: _connected && _sync
                   ? IconButton(
-                      icon: const Icon(Icons.phonelink_ring,
-                          color: MainWidget.color),
+                      icon: Icon(Icons.phonelink_ring,
+                          color: Theme.of(context).primaryColor),
                       padding: EdgeInsets.only(left: leftPad, top: topPad),
                       onPressed: () {
                         setState(() {
@@ -342,7 +341,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                     visible: !_isRunning,
                     child: Text(_title,
                         style: TextStyle(
-                            color: MainWidget.color, fontSize: fontSize)))),
+                            color: Theme.of(context).primaryColor,
+                            fontSize: fontSize)))),
             backgroundColor: Colors.transparent,
             elevation: 0,
             actions: <Widget>[
@@ -351,7 +351,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                 child: PopupMenuButton<String>(
                   elevation: 0,
                   padding: EdgeInsets.only(right: rightPad, top: topPad),
-                  icon: const Icon(Icons.more_vert, color: MainWidget.color),
+                  icon: Icon(Icons.more_vert,
+                      color: Theme.of(context).primaryColor),
                   onSelected: (value) {
                     updatePreference(value);
                   },
@@ -364,8 +365,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                           child: Text(choice,
                               key: Key(choice),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: MainWidget.color,
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
                               )),
                         ),
                       );
