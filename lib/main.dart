@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
+import 'package:wakelock/wakelock.dart';
 import 'package:wear/wear.dart';
 import 'package:watch_connectivity/watch_connectivity.dart';
 
@@ -59,6 +60,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   Duration _duration = const Duration(seconds: 0);
   bool _isRunning = false,
       _hasVibrate = false,
+      _hasWakelock = false,
       _connected = false,
       _sync = true;
   double _scale = 0.0;
@@ -80,13 +82,16 @@ class _HomeWidgetState extends State<HomeWidget> {
     debugPrint("$widget.initState");
 
     // Set default preference
-    updatePreference(DEFAULT_TEXT);
+    _updatePreference(DEFAULT_TEXT);
 
     // Init vibration
-    initVibrate();
+    _initVibrate();
+
+    // Init wakelock
+    _initWakeLock();
 
     // Init phone communication
-    initWear();
+    _initWear();
 
     super.initState();
   }
@@ -99,21 +104,28 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   // To pair phone for testing see:
   // https://developer.android.com/training/wearables/get-started/creating#pair-phone-with-avd
-  void initWear() {
+  void _initWear() {
     _watch.messageStream.listen((message) => setState(() {
           debugPrint('Received message: $message');
           _connected = true;
           if (Preference.isPreference(message) && _sync) {
             _phonePreference = Preference.fromJson(message);
-            updatePreference(HomeWidget.phonePreference);
+            _updatePreference(HomeWidget.phonePreference);
           }
         }));
 
     // request the current preference from phone
-    send({"preference": 0});
+    _send({"preference": 0});
   }
 
-  Future<void> initVibrate() async {
+  void _send(message) {
+    if (_sync) {
+      debugPrint("Sent message: $message");
+      _watch.sendMessage(message);
+    }
+  }
+
+  Future<void> _initVibrate() async {
     try {
       _hasVibrate = await Vibration.hasVibrator() ?? false;
       if (_hasVibrate) {
@@ -125,21 +137,30 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
-  Future<void> vibrate(int duration) async {
+  Future<void> _vibrate(int duration) async {
     debugPrint("$widget.vibrate($duration)");
     if (_hasVibrate && duration > 0) {
       await Vibration.vibrate(duration: duration);
     }
   }
 
-  void send(message) {
-    if (_sync) {
-      debugPrint("Sent message: $message");
-      _watch.sendMessage(message);
+  Future<void> _initWakeLock() async {
+    try {
+      await Wakelock.enabled;
+      _hasWakelock = true;
+    } catch (e) {
+      debugPrint(e.toString());
     }
   }
 
-  void buttonPressed() {
+  void _wakeLock(bool enable) {
+    if (_hasWakelock) {
+      debugPrint("$widget.wakelock($enable)");
+      Wakelock.toggle(enable: enable);
+    }
+  }
+
+  void _buttonPressed() {
     debugPrint("$widget.buttonPressed");
 
     _connected = false;
@@ -147,6 +168,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       _isRunning = false;
     } else {
       _isRunning = true;
+      _wakeLock(true);
       Duration timerSpan = const Duration(milliseconds: 100);
       Duration duration = const Duration(milliseconds: 0);
       int inhale =
@@ -167,15 +189,16 @@ class _HomeWidgetState extends State<HomeWidget> {
             (duration.inSeconds >= _duration.inSeconds && cycle <= 0)) {
           setState(() {
             _isRunning = false;
+            _wakeLock(false);
             _scale = 0.0;
             _timer = getDurationString(_duration);
             timer.cancel();
-            vibrate(_preference.vibrateDuration);
+            _vibrate(_preference.vibrateDuration);
             int breaths = (duration.inMilliseconds / breath).round();
             Session session = Session(start: start);
             session.end = DateTime.now();
             session.breaths = breaths;
-            send(session.toJson());
+            _send(session.toJson());
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               backgroundColor: Theme.of(context).primaryColor,
               content: Text(
@@ -188,33 +211,33 @@ class _HomeWidgetState extends State<HomeWidget> {
               inhaling = true;
               exhaling = false;
               _scale = 0.0;
-              vibrate(_preference.vibrateBreath);
+              _vibrate(_preference.vibrateBreath);
             } else if (_preference.inhale[1] > 0 &&
                 cycle == _preference.inhale[0]) {
               inhaling = false;
               exhaling = false;
-              vibrate(_preference.vibrateBreath);
+              _vibrate(_preference.vibrateBreath);
             } else if (_preference.inhale[2] > 0 &&
                 cycle == _preference.inhale[0] + _preference.inhale[1]) {
               inhaling = true;
               exhaling = false;
-              vibrate(_preference.vibrateBreath);
+              _vibrate(_preference.vibrateBreath);
             } else if (cycle == inhale) {
               inhaling = false;
               exhaling = true;
               _scale = 1.0;
-              vibrate(_preference.vibrateBreath);
+              _vibrate(_preference.vibrateBreath);
             } else if (_preference.exhale[1] > 0 &&
                 cycle == inhale + _preference.exhale[0]) {
               inhaling = false;
               exhaling = false;
-              vibrate(_preference.vibrateBreath);
+              _vibrate(_preference.vibrateBreath);
             } else if (_preference.exhale[2] > 0 &&
                 cycle ==
                     inhale + _preference.exhale[0] + _preference.exhale[1]) {
               inhaling = false;
               exhaling = true;
-              vibrate(_preference.vibrateBreath);
+              _vibrate(_preference.vibrateBreath);
             }
 
             cycle += timerSpan.inMilliseconds;
@@ -245,7 +268,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
-  Future<void> updatePreference(String value) async {
+  Future<void> _updatePreference(String value) async {
     debugPrint("$widget.updatePreference($value)");
 
     setState(() {
@@ -257,7 +280,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               backgroundColor: Theme.of(context).primaryColor,
-              content: const Text("Not paired to phone\n\n\n"),
+              content: const Text("Not paired to Brethap phone app\n"),
             ));
           }
           break;
@@ -294,12 +317,12 @@ class _HomeWidgetState extends State<HomeWidget> {
         double leftPad = 0.0,
             rightPad = 0.0,
             topPad = 0.0,
-            fontSize = 12.0,
+            fontSize = 10.0,
             prefWidth = 150;
         if (shape == WearShape.round) {
           leftPad = 40.0;
           rightPad = 35.0;
-          topPad = 15.0;
+          topPad = 30.0;
           prefWidth = 125;
         }
         return Scaffold(
@@ -324,7 +347,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                       onPressed: () {
                         setState(() {
                           _sync = true;
-                          send({"preference": 0});
+                          _send({"preference": 0});
                         });
                       },
                     ),
@@ -354,7 +377,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                   icon: Icon(Icons.more_vert,
                       color: Theme.of(context).primaryColor),
                   onSelected: (value) {
-                    updatePreference(value);
+                    _updatePreference(value);
                   },
                   itemBuilder: (BuildContext context) {
                     return presets.map((String choice) {
@@ -412,7 +435,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     )),
                     onPressed: () {
                       setState(() {
-                        buttonPressed();
+                        _buttonPressed();
                       });
                     },
                     child: _isRunning

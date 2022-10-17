@@ -1,0 +1,3 @@
+Wear OS release version: 1.0.2+57
+* Improvements for Pixel Watch
+* Minor enhancements

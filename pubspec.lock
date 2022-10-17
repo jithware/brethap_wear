@@ -639,7 +639,7 @@ packages:
     source: hosted
     version: "9.0.0"
   wakelock:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: wakelock
       url: "https://pub.dartlang.org"
