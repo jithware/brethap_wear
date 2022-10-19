@@ -32,8 +32,8 @@ Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear 
      alt="Presets">](./screenshots/android/presets.webp)
 
 ### Custom
-* To select the custom preset, press the phone button. The [Brethap](https://github.com/jithware/brethap#readme) phone app must be running on your phone and your watch setup with the [Wear OS App](https://support.google.com/wearos/answer/6056630) or other similar [watch app](https://play.google.com/store/apps/details?id=com.google.android.apps.wear.companion).
-* To change the custom preset on your watch, open the Brethap [Preferences](https://github.com/jithware/brethap#preferences) on your phone and modify the preference.
+* To select a custom preset, press the phone button. The [Brethap](https://github.com/jithware/brethap#readme) phone app must be running on your phone and your watch setup with the [Wear OS App](https://support.google.com/wearos/answer/6056630) or other similar [watch app](https://play.google.com/store/apps/details?id=com.google.android.apps.wear.companion).
+* To change the custom preset on your watch, open the Brethap [Preferences](https://github.com/jithware/brethap#preferences) on your phone and modify the preference. Press the phone button.
 
 [<img src="./screenshots/android/custom.webp"
      alt="Custom">](./screenshots/android/custom.webp)
