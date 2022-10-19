@@ -2,6 +2,8 @@
 // flutter test integration_test/demo_test.dart
 // To execute demo with screenshots saved run:
 // flutter drive --no-pub --driver=integration_test/driver.dart --target=integration_test/demo_test.dart
+// To execute demo script run:
+// ../brethap/screenshots/demo.sh emulator-5554
 
 import 'package:brethap/constants.dart';
 import 'package:flutter/material.dart';
@@ -103,12 +105,8 @@ Future<void> main() async {
       debugPrint("Demo Custom(${stopwatch.elapsed})...");
       await tester.pump(wait);
 
-      // tap presets
-      await tester.tap(find.byType(PopupMenuButton<String>));
-      await tester.pump(wait);
-
-      // tap custom
-      await tester.tap(find.byKey(const Key(HomeWidget.phonePreference)));
+      // tap connect
+      await tester.tap(find.byKey(const Key(HomeWidget.keyConnect)));
 
       await tester.pumpAndSettle();
       takeScreenshot(binding, "6_custom.png");
@@ -119,16 +117,12 @@ Future<void> main() async {
       await tester.tap(find.byKey(const Key(HomeWidget.keyTitle)));
       await tester.pump(wait);
 
-      // tap phone
-      await tester.tap(find.byType(IconButton).first);
-      await tester.pump(wait);
-
       await tester.pumpAndSettle();
       envVars += "CUSTOM_END=${stopwatch.elapsed}\n";
     }
 
-    await tester.pumpAndSettle();
-    takeScreenshot(binding, "7_dark.png");
+    //await tester.pumpAndSettle();
+    //takeScreenshot(binding, "7_dark.png");
 
     await tester.pump(wait);
     envVars += "DEMO_END=${stopwatch.elapsed}\n";

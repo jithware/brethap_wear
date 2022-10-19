@@ -50,7 +50,8 @@ class HomeWidget extends StatefulWidget {
 
   static const String appName = "Brethap",
       phonePreference = "Phone Preference",
-      keyTitle = "Title";
+      keyTitle = "Title",
+      keyConnect = "Connect";
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -61,8 +62,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   bool _isRunning = false,
       _hasVibrate = false,
       _hasWakelock = false,
-      _connected = false,
-      _sync = true;
+      _connected = false;
   double _scale = 0.0;
   String _title = "", _timer = "";
   Preference? _phonePreference;
@@ -70,7 +70,6 @@ class _HomeWidgetState extends State<HomeWidget> {
   final WatchConnectivity _watch = WatchConnectivity();
 
   final List<String> presets = [
-    HomeWidget.phonePreference,
     PRESET_478_TEXT,
     BOX_TEXT,
     PHYS_SIGH_TEXT,
@@ -108,7 +107,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     _watch.messageStream.listen((message) => setState(() {
           debugPrint('Received message: $message');
           _connected = true;
-          if (Preference.isPreference(message) && _sync) {
+          if (Preference.isPreference(message)) {
             _phonePreference = Preference.fromJson(message);
             _updatePreference(HomeWidget.phonePreference);
           }
@@ -119,10 +118,8 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   void _send(message) {
-    if (_sync) {
-      debugPrint("Sent message: $message");
-      _watch.sendMessage(message);
-    }
+    debugPrint("Sent message: $message");
+    _watch.sendMessage(message);
   }
 
   Future<void> _initVibrate() async {
@@ -329,24 +326,24 @@ class _HomeWidgetState extends State<HomeWidget> {
           appBar: AppBar(
             leading: Visibility(
               visible: !_isRunning,
-              child: _connected && _sync
+              child: _connected
                   ? IconButton(
                       icon: Icon(Icons.phonelink_ring,
                           color: Theme.of(context).primaryColor),
                       padding: EdgeInsets.only(left: leftPad, top: topPad),
                       onPressed: () {
                         setState(() {
-                          _sync = false;
+                          _send({"preference": 0});
                         });
                       },
                     )
                   : IconButton(
+                      key: const Key(HomeWidget.keyConnect),
                       icon:
                           const Icon(Icons.phonelink_erase, color: Colors.grey),
                       padding: EdgeInsets.only(left: leftPad, top: topPad),
                       onPressed: () {
                         setState(() {
-                          _sync = true;
                           _send({"preference": 0});
                         });
                       },

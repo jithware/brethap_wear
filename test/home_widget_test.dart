@@ -26,7 +26,7 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   expect(find.text(getDurationString(Duration(seconds: preference.duration))),
       findsOneWidget);
 
-  // Press stop button
+  // Press start button
   await tester.tap(find.byType(ElevatedButton));
 
   // Wait a bit

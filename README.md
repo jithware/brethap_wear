@@ -15,7 +15,6 @@ Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear 
 ![preset1](fastlane/metadata/android/en-US/images/wearScreenshots/4_preset.png)
 ![preset2](fastlane/metadata/android/en-US/images/wearScreenshots/5_preset.png)
 ![custom](fastlane/metadata/android/en-US/images/wearScreenshots/6_custom.png)
-![dark](fastlane/metadata/android/en-US/images/wearScreenshots/7_dark.png)
 
 ## Usage
 
@@ -33,7 +32,7 @@ Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear 
      alt="Presets">](./screenshots/android/presets.webp)
 
 ### Custom
-* To select the custom preset, press the menu button and select Phone Preference. If you are not connected to the phone app, press the phone button to do so. The [Brethap](https://github.com/jithware/brethap#readme) phone app must be installed on your phone and your watch setup with the [Wear OS App](https://support.google.com/wearos/answer/6056630) or other similar [watch app](https://play.google.com/store/apps/details?id=com.google.android.apps.wear.companion).
+* To select the custom preset, press the phone button. The [Brethap](https://github.com/jithware/brethap#readme) phone app must be running on your phone and your watch setup with the [Wear OS App](https://support.google.com/wearos/answer/6056630) or other similar [watch app](https://play.google.com/store/apps/details?id=com.google.android.apps.wear.companion).
 * To change the custom preset on your watch, open the Brethap [Preferences](https://github.com/jithware/brethap#preferences) on your phone and modify the preference.
 
 [<img src="./screenshots/android/custom.webp"
