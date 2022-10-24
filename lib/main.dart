@@ -3,6 +3,8 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_sensors/flutter_sensors.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:wear/wear.dart';
@@ -62,12 +64,18 @@ class _HomeWidgetState extends State<HomeWidget> {
   bool _isRunning = false,
       _hasVibrate = false,
       _hasWakelock = false,
+      _hasHeartRate = false,
       _connected = false;
   double _scale = 0.0;
   String _title = "", _timer = "";
   Preference? _phonePreference;
   Preference _preference = Preference.getDefaultPref();
   final WatchConnectivity _watch = WatchConnectivity();
+
+  final Duration _heartSensorDelay = const Duration(seconds: 1);
+  Stream? _heartStream;
+  StreamSubscription? _heartSubscription;
+  List<double>? _heartrates;
 
   final List<String> presets = [
     PRESET_478_TEXT,
@@ -91,6 +99,9 @@ class _HomeWidgetState extends State<HomeWidget> {
 
     // Init phone communication
     _initWear();
+
+    // Init sensors
+    _initSensors();
 
     super.initState();
   }
@@ -157,6 +168,47 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
+  Future<void> _initSensors() async {
+    // https://developer.android.com/reference/android/hardware/Sensor#TYPE_HEART_RATE
+    // ignore: constant_identifier_names
+    const int TYPE_HEART_RATE = 21;
+
+    try {
+      _hasHeartRate = await SensorManager().isSensorAvailable(TYPE_HEART_RATE);
+      if (_hasHeartRate) {
+        Permission.sensors.request().then((value) async {
+          if (value.isGranted) {
+            _heartStream = await SensorManager().sensorUpdates(
+              sensorId: TYPE_HEART_RATE,
+              interval: _heartSensorDelay,
+            );
+          } else {
+            _hasHeartRate = false;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      _hasHeartRate = false;
+    }
+  }
+
+  void _heartRate(bool enable) {
+    if (_hasHeartRate) {
+      if (enable) {
+        _heartrates = [];
+        _heartSubscription = _heartStream!.listen((sensorEvent) {
+          _heartrates!.addAll(sensorEvent.data);
+          debugPrint("heartRates: $_heartrates");
+        });
+      } else {
+        if (_heartSubscription != null) {
+          _heartSubscription!.cancel();
+        }
+      }
+    }
+  }
+
   void _buttonPressed() {
     debugPrint("$widget.buttonPressed");
 
@@ -165,6 +217,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       _isRunning = false;
     } else {
       _isRunning = true;
+      _heartRate(true);
       _wakeLock(true);
       Duration timerSpan = const Duration(milliseconds: 100);
       Duration duration = const Duration(milliseconds: 0);
@@ -186,6 +239,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             (duration.inSeconds >= _duration.inSeconds && cycle <= 0)) {
           setState(() {
             _isRunning = false;
+            _heartRate(false);
             _wakeLock(false);
             _scale = 0.0;
             _timer = getDurationString(_duration);
@@ -195,6 +249,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             Session session = Session(start: start);
             session.end = DateTime.now();
             session.breaths = breaths;
+            session.heartrates = _heartrates;
             _send(session.toJson());
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               backgroundColor: Theme.of(context).primaryColor,
@@ -259,8 +314,8 @@ class _HomeWidgetState extends State<HomeWidget> {
           });
         }
 
-        debugPrint(
-            "duration: $duration  breaths: ${(duration.inMilliseconds / breath).toStringAsFixed(3)} scale: ${_scale.toStringAsFixed(3)} cycle: $cycle");
+        // debugPrint(
+        //     "duration: $duration  breaths: ${(duration.inMilliseconds / breath).toStringAsFixed(3)} scale: ${_scale.toStringAsFixed(3)} cycle: $cycle");
       });
     }
   }
@@ -307,6 +362,104 @@ class _HomeWidgetState extends State<HomeWidget> {
     });
   }
 
+  Widget _getLeading(double leftPad, double topPad) {
+    if (_connected && !_isRunning) {
+      return IconButton(
+        icon: Icon(Icons.phonelink_ring, color: Theme.of(context).primaryColor),
+        padding: EdgeInsets.only(left: leftPad, top: topPad),
+        onPressed: () {
+          setState(() {
+            _send({"preference": 0});
+          });
+        },
+      );
+    }
+    if (!_connected && !_isRunning) {
+      return IconButton(
+        key: const Key(HomeWidget.keyConnect),
+        icon: const Icon(Icons.phonelink_erase, color: Colors.grey),
+        padding: EdgeInsets.only(left: leftPad, top: topPad),
+        onPressed: () {
+          setState(() {
+            _send({"preference": 0});
+          });
+        },
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  List<Widget> _getActions(double rightPad, double topPad, double prefWidth) {
+    if (!_isRunning) {
+      return [
+        PopupMenuButton<String>(
+          elevation: 0,
+          padding: EdgeInsets.only(right: rightPad, top: topPad),
+          icon: Icon(Icons.more_vert, color: Theme.of(context).primaryColor),
+          onSelected: (value) {
+            _updatePreference(value);
+          },
+          itemBuilder: (BuildContext context) {
+            return presets.map((String choice) {
+              return PopupMenuItem<String>(
+                value: choice,
+                child: SizedBox(
+                  width: prefWidth,
+                  child: Text(choice,
+                      key: Key(choice),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                      )),
+                ),
+              );
+            }).toList();
+          },
+        )
+      ];
+    }
+
+    return [const SizedBox.shrink()];
+  }
+
+  Widget _getCenterWidgets(double leftPad, double rightPad) {
+    Widget heart = const SizedBox.shrink(),
+        spacer = const SizedBox.shrink(),
+        bpm = const Text("");
+    const double iconSize = 15.0;
+
+    if (_isRunning && _hasHeartRate) {
+      if (_heartrates != null && _heartrates!.isNotEmpty) {
+        int heartrate = _heartrates!.last.toInt();
+        bpm = Text(
+          "$heartrate",
+        );
+      }
+      heart = Icon(Icons.monitor_heart,
+          size: iconSize, color: Theme.of(context).primaryColor);
+      spacer = const SizedBox(width: 5);
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.timer,
+          size: iconSize,
+          color: Theme.of(context).primaryColor,
+        ),
+        const SizedBox(width: 1),
+        Text(
+          _timer,
+        ),
+        spacer,
+        heart,
+        const SizedBox(width: 1),
+        bpm,
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WatchShape(
@@ -317,85 +470,31 @@ class _HomeWidgetState extends State<HomeWidget> {
             fontSize = 10.0,
             prefWidth = 150;
         if (shape == WearShape.round) {
-          leftPad = 40.0;
+          leftPad = 30.0;
           rightPad = 35.0;
           topPad = 30.0;
           prefWidth = 125;
         }
         return Scaffold(
           appBar: AppBar(
-            leading: Visibility(
-              visible: !_isRunning,
-              child: _connected
-                  ? IconButton(
-                      icon: Icon(Icons.phonelink_ring,
-                          color: Theme.of(context).primaryColor),
-                      padding: EdgeInsets.only(left: leftPad, top: topPad),
-                      onPressed: () {
-                        setState(() {
-                          _send({"preference": 0});
-                        });
-                      },
-                    )
-                  : IconButton(
-                      key: const Key(HomeWidget.keyConnect),
-                      icon:
-                          const Icon(Icons.phonelink_erase, color: Colors.grey),
-                      padding: EdgeInsets.only(left: leftPad, top: topPad),
-                      onPressed: () {
-                        setState(() {
-                          _send({"preference": 0});
-                        });
-                      },
-                    ),
-            ),
-            centerTitle: true,
-            title: GestureDetector(
-                key: const Key(HomeWidget.keyTitle),
-                onTap: () {
-                  setState(() {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  });
-                },
-                child: Visibility(
-                    visible: !_isRunning,
-                    child: Text(_title,
-                        style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontSize: fontSize)))),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            actions: <Widget>[
-              Visibility(
-                visible: !_isRunning,
-                child: PopupMenuButton<String>(
-                  elevation: 0,
-                  padding: EdgeInsets.only(right: rightPad, top: topPad),
-                  icon: Icon(Icons.more_vert,
-                      color: Theme.of(context).primaryColor),
-                  onSelected: (value) {
-                    _updatePreference(value);
+              leading: _getLeading(leftPad, topPad),
+              centerTitle: true,
+              title: GestureDetector(
+                  key: const Key(HomeWidget.keyTitle),
+                  onTap: () {
+                    setState(() {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    });
                   },
-                  itemBuilder: (BuildContext context) {
-                    return presets.map((String choice) {
-                      return PopupMenuItem<String>(
-                        value: choice,
-                        child: SizedBox(
-                          width: prefWidth,
-                          child: Text(choice,
-                              key: Key(choice),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                              )),
-                        ),
-                      );
-                    }).toList();
-                  },
-                ),
-              ),
-            ],
-          ),
+                  child: Visibility(
+                      visible: !_isRunning,
+                      child: Text(_title,
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontSize: fontSize)))),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              actions: _getActions(rightPad, topPad, prefWidth)),
           extendBodyBehindAppBar: true,
           body: GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -419,9 +518,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                             ),
                           ),
                         ))),
-                Text(
-                  _timer,
-                ),
+                _getCenterWidgets(leftPad, rightPad),
                 ElevatedButton(
                     style: ButtonStyle(
                         shape:
