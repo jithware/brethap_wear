@@ -39,9 +39,11 @@ packages:
   brethap:
     dependency: "direct main"
     description:
-      path: "../brethap"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "24c08c0e61c8334755e0b053908a70c731b449bc"
+      url: "https://github.com/jithware/brethap.git"
+    source: git
     version: "1.7.4+60"
   characters:
     dependency: transitive
@@ -72,7 +74,7 @@ packages:
     source: hosted
     version: "1.1.1"
   collection:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: collection
       url: "https://pub.dartlang.org"

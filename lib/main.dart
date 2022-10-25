@@ -2,6 +2,7 @@
 // https://developer.android.com/training/wearables/packaging
 
 import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sensors/flutter_sensors.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -35,11 +36,7 @@ class MainWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      // To change device to dark mode run: adb shell "cmd uimode night yes"
-      darkTheme: ThemeData.dark(),
+      theme: ThemeData.dark().copyWith(primaryColor: Colors.blue),
       debugShowCheckedModeBanner: false,
       home: const HomeWidget(title: title),
     );
@@ -52,8 +49,10 @@ class HomeWidget extends StatefulWidget {
 
   static const String appName = "Brethap",
       phonePreference = "Phone Preference",
-      keyTitle = "Title",
-      keyConnect = "Connect";
+      keyConnect = "Connect",
+      keyStart = "Start",
+      keyDrag = "Drag";
+  static const snackBarDuration = Duration(seconds: 5);
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -78,6 +77,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   List<double>? _heartrates;
 
   final List<String> presets = [
+    HomeWidget.phonePreference,
     PRESET_478_TEXT,
     BOX_TEXT,
     PHYS_SIGH_TEXT,
@@ -209,6 +209,57 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
+  void _showSessionSnackBar(Session session, int breaths) {
+    Widget heart = const SizedBox.shrink(), bpm = const Text("");
+    TextStyle textStyle = const TextStyle(
+      color: Colors.white,
+    );
+    List<double>? heartrates = session.heartrates;
+    if (heartrates != null) {
+      int average = heartrates.average.toInt();
+      if (average > 0) {
+        bpm = Text("$average", style: textStyle);
+        heart = Icon(Icons.favorite, color: Theme.of(context).primaryColor);
+      }
+    }
+
+    SizedBox spacer = const SizedBox(width: 5);
+    Column content =
+        Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        Icon(
+          key: const Key(HomeWidget.keyDrag),
+          Icons.timer,
+          color: Theme.of(context).primaryColor,
+        ),
+        spacer,
+        Text(
+            getDurationString(
+                roundDuration(session.end.difference(session.start))),
+            style: textStyle),
+      ]),
+      Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        Icon(
+          Icons.air,
+          color: Theme.of(context).primaryColor,
+        ),
+        spacer,
+        Text("$breaths", style: textStyle),
+      ]),
+      Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        heart,
+        spacer,
+        bpm,
+      ])
+    ]);
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: HomeWidget.snackBarDuration,
+      backgroundColor: Theme.of(context).canvasColor,
+      content: content,
+    ));
+  }
+
   void _buttonPressed() {
     debugPrint("$widget.buttonPressed");
 
@@ -251,11 +302,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             session.breaths = breaths;
             session.heartrates = _heartrates;
             _send(session.toJson());
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              backgroundColor: Theme.of(context).primaryColor,
-              content: Text(
-                  "Duration: ${getDurationString(roundDuration(session.end.difference(session.start)))}  Breaths: $breaths\n\n"),
-            ));
+            _showSessionSnackBar(session, breaths);
           });
         } else {
           setState(() {
@@ -331,8 +378,11 @@ class _HomeWidgetState extends State<HomeWidget> {
             _preference = _phonePreference!;
           } else {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              backgroundColor: Theme.of(context).primaryColor,
-              content: const Text("Not paired to Brethap phone app\n"),
+              backgroundColor: Theme.of(context).canvasColor,
+              content: const Text("Not paired to Brethap phone app\n",
+                  style: TextStyle(
+                    color: Colors.white,
+                  )),
             ));
           }
           break;
@@ -377,7 +427,8 @@ class _HomeWidgetState extends State<HomeWidget> {
     if (!_connected && !_isRunning) {
       return IconButton(
         key: const Key(HomeWidget.keyConnect),
-        icon: const Icon(Icons.phonelink_erase, color: Colors.grey),
+        icon:
+            Icon(Icons.phonelink_erase, color: Theme.of(context).disabledColor),
         padding: EdgeInsets.only(left: leftPad, top: topPad),
         onPressed: () {
           setState(() {
@@ -394,6 +445,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     if (!_isRunning) {
       return [
         PopupMenuButton<String>(
+          color: Theme.of(context).canvasColor,
           elevation: 0,
           padding: EdgeInsets.only(right: rightPad, top: topPad),
           icon: Icon(Icons.more_vert, color: Theme.of(context).primaryColor),
@@ -436,7 +488,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           "$heartrate",
         );
       }
-      heart = Icon(Icons.monitor_heart,
+      heart = Icon(Icons.favorite,
           size: iconSize, color: Theme.of(context).primaryColor);
       spacer = const SizedBox(width: 5);
     }
@@ -468,7 +520,8 @@ class _HomeWidgetState extends State<HomeWidget> {
             rightPad = 0.0,
             topPad = 0.0,
             fontSize = 10.0,
-            prefWidth = 150;
+            prefWidth = 150,
+            iconSize = 40.0;
         if (shape == WearShape.round) {
           leftPad = 30.0;
           rightPad = 35.0;
@@ -479,66 +532,52 @@ class _HomeWidgetState extends State<HomeWidget> {
           appBar: AppBar(
               leading: _getLeading(leftPad, topPad),
               centerTitle: true,
-              title: GestureDetector(
-                  key: const Key(HomeWidget.keyTitle),
-                  onTap: () {
-                    setState(() {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    });
-                  },
-                  child: Visibility(
-                      visible: !_isRunning,
-                      child: Text(_title,
-                          style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontSize: fontSize)))),
+              title: Visibility(
+                  visible: !_isRunning,
+                  child: Text(_title,
+                      style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontSize: fontSize))),
               backgroundColor: Colors.transparent,
               elevation: 0,
               actions: _getActions(rightPad, topPad, prefWidth)),
           extendBodyBehindAppBar: true,
-          body: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Center(
-                    child: Transform.scale(
-                        scale: _scale,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            width: 90.0,
-                            height: 90.0,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
-                              shape: BoxShape.circle,
-                            ),
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Center(
+                  child: Transform.scale(
+                      scale: _scale,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          width: 90.0,
+                          height: 90.0,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            shape: BoxShape.circle,
                           ),
-                        ))),
-                _getCenterWidgets(leftPad, rightPad),
-                ElevatedButton(
-                    style: ButtonStyle(
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                    )),
-                    onPressed: () {
-                      setState(() {
-                        _buttonPressed();
-                      });
-                    },
-                    child: _isRunning
-                        ? const Text(
-                            "Stop",
-                          )
-                        : const Text("Start"))
-              ],
-            ),
+                        ),
+                      ))),
+              _getCenterWidgets(leftPad, rightPad),
+              IconButton(
+                  key: const Key(HomeWidget.keyStart),
+                  iconSize: iconSize,
+                  onPressed: () {
+                    setState(() {
+                      _buttonPressed();
+                    });
+                  },
+                  icon: _isRunning
+                      ? Icon(
+                          Icons.stop_rounded,
+                          color: Theme.of(context).primaryColor,
+                        )
+                      : Icon(
+                          Icons.play_arrow_rounded,
+                          color: Theme.of(context).primaryColor,
+                        ))
+            ],
           ),
         );
       },

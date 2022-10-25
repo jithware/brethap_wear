@@ -12,6 +12,17 @@ Future<void> main() async {
         'cmd uimode night no',
       ],
     );
+    await Process.run(
+      'adb',
+      [
+        '-e',
+        'shell',
+        'pm',
+        'grant',
+        'com.jithware.brethap',
+        'android.permission.BODY_SENSORS'
+      ],
+    );
     await integrationDriver(
       onScreenshot: (String name, List<int> bytes) async {
         final File image =

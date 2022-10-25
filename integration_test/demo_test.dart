@@ -29,11 +29,12 @@ Future<void> main() async {
 
     Stopwatch stopwatch = Stopwatch()..start();
     String envVars = "";
+    int snapshot = 1;
 
     await tester.pump(wait);
 
     await tester.pumpAndSettle();
-    takeScreenshot(binding, "1_home.png");
+    takeScreenshot(binding, "${snapshot++}_home.png");
 
     // Running
     if (demoRunning) {
@@ -41,7 +42,7 @@ Future<void> main() async {
       await tester.pump(wait);
 
       // tap start
-      Finder finder = find.byType(ElevatedButton);
+      Finder finder = find.byKey(const Key(HomeWidget.keyStart));
       expect(finder, findsOneWidget);
       await tester.tap(finder);
       await tester.pump(wait);
@@ -49,26 +50,29 @@ Future<void> main() async {
       // running
       for (int i = 0; i < 100; i++) {
         if (i == 20) {
-          takeScreenshot(binding, "2_inhale.png");
+          takeScreenshot(binding, "${snapshot++}_inhale.png");
         }
         await tester.pump(const Duration(milliseconds: 100));
       }
 
       // tap stop
-      finder = find.byType(ElevatedButton);
+      finder = find.byKey(const Key(HomeWidget.keyStart));
       expect(finder, findsOneWidget);
       await tester.tap(finder);
 
       await tester.pumpAndSettle();
-      takeScreenshot(binding, "3_duration.png");
+      takeScreenshot(binding, "${snapshot++}_duration.png");
 
-      // Tapping title closes snackbar
       await tester.pump(wait);
-      await tester.tap(find.byKey(const Key(HomeWidget.keyTitle)));
+
+      // drag to close snackbar
+      finder = find.byKey(const Key(HomeWidget.keyDrag));
+      expect(finder, findsOneWidget);
+      await tester.drag(finder, const Offset(0, 100));
       await tester.pump(wait);
 
       await tester.pumpAndSettle();
-      envVars += "RUNNING_END=${stopwatch.elapsed}\n";
+      envVars += "RUNNING_END=${stopwatch.elapsed - wait}\n";
     }
 
     // Presets
@@ -80,7 +84,7 @@ Future<void> main() async {
       await tester.tap(find.byType(PopupMenuButton<String>));
 
       await tester.pumpAndSettle();
-      takeScreenshot(binding, "4_preset.png");
+      takeScreenshot(binding, "${snapshot++}_preset.png");
 
       await tester.pump(wait);
 
@@ -89,7 +93,7 @@ Future<void> main() async {
           find.byKey(const Key(DEFAULT_TEXT)), const Offset(0, -1));
 
       await tester.pumpAndSettle();
-      takeScreenshot(binding, "5_preset.png");
+      takeScreenshot(binding, "${snapshot++}_preset.png");
 
       // tap default
       await tester.pump(wait);
@@ -97,7 +101,7 @@ Future<void> main() async {
       await tester.pump(wait);
 
       await tester.pumpAndSettle();
-      envVars += "PRESETS_END=${stopwatch.elapsed}\n";
+      envVars += "PRESETS_END=${stopwatch.elapsed - wait}\n";
     }
 
     // Custom
@@ -109,20 +113,17 @@ Future<void> main() async {
       await tester.tap(find.byKey(const Key(HomeWidget.keyConnect)));
 
       await tester.pumpAndSettle();
-      takeScreenshot(binding, "6_custom.png");
+      takeScreenshot(binding, "${snapshot++}_custom.png");
 
       await tester.pump(wait);
 
-      // Tapping title closes snackbar
-      await tester.tap(find.byKey(const Key(HomeWidget.keyTitle)));
+      // wait for snackbar to close
+      await tester.pump(HomeWidget.snackBarDuration);
       await tester.pump(wait);
 
       await tester.pumpAndSettle();
-      envVars += "CUSTOM_END=${stopwatch.elapsed}\n";
+      envVars += "CUSTOM_END=${stopwatch.elapsed - wait}\n";
     }
-
-    //await tester.pumpAndSettle();
-    //takeScreenshot(binding, "7_dark.png");
 
     await tester.pump(wait);
     envVars += "DEMO_END=${stopwatch.elapsed}\n";

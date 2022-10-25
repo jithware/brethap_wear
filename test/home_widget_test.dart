@@ -16,25 +16,24 @@ Future<void> testHomeWidget(WidgetTester tester) async {
       exhale =
           Duration(milliseconds: preference.exhale[0] + preference.exhale[1]);
 
+  // Accept permissions
+  await tester.pump(wait * 3);
+
   // Verify app name in title bar
   expect(find.text(HomeWidget.appName), findsOneWidget);
-
-  // Verify button text
-  expect(find.text("Start"), findsOneWidget);
 
   // Verify initial timer text
   expect(find.text(getDurationString(Duration(seconds: preference.duration))),
       findsOneWidget);
 
-  // Press start button
-  await tester.tap(find.byType(ElevatedButton));
+  // Press start
+  Finder finder = find.byKey(const Key(HomeWidget.keyStart));
+  expect(finder, findsOneWidget);
+  await tester.tap(finder);
 
   // Wait a bit
   await tester.pump(wait);
   totalTime += wait;
-
-  // Verify button text
-  expect(find.text("Stop"), findsOneWidget);
 
   // Verify timer
   expect(find.text(getDurationString(duration - totalTime)), findsOneWidget);
@@ -54,8 +53,10 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   await tester.pump(exhale);
   totalTime += exhale;
 
-  // Press stop button
-  await tester.tap(find.byType(ElevatedButton));
+  // Press stop
+  finder = find.byKey(const Key(HomeWidget.keyStart));
+  expect(finder, findsOneWidget);
+  await tester.tap(finder);
 
   // Wait a bit
   await tester.pump(wait);
@@ -69,9 +70,19 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   totalTime += wait;
   expect(find.byType(SnackBar), findsOneWidget);
 
-  // Tapping title closes snackbar
-  await tester.tap(find.byKey(const Key(HomeWidget.keyTitle)));
-  await tester.pump(wait);
+  // Wait for snackbar to close
+  await tester.pump(HomeWidget.snackBarDuration);
+  await tester.pumpAndSettle();
+
+  // Tap presets
+  await tester.tap(find.byType(PopupMenuButton<String>));
+  await tester.pumpAndSettle();
+
+  // Tap preset
+  finder = find.byKey(const Key(HomeWidget.phonePreference));
+  expect(finder, findsOneWidget);
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
 
   // Tap presets
   await tester.tap(find.byType(PopupMenuButton<String>));
@@ -79,7 +90,7 @@ Future<void> testHomeWidget(WidgetTester tester) async {
 
   // Tap preset
   preference = Preference.get478Pref();
-  Finder finder = find.byKey(const Key(PRESET_478_TEXT));
+  finder = find.byKey(const Key(PRESET_478_TEXT));
   expect(finder, findsOneWidget);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
