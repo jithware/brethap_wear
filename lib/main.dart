@@ -209,7 +209,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
-  void _showSessionSnackBar(Session session, int breaths) {
+  void _showSessionSnackBar(Session session) {
     Widget heart = const SizedBox.shrink(), bpm = const Text("");
     TextStyle textStyle = const TextStyle(
       color: Colors.white,
@@ -244,7 +244,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           color: Theme.of(context).primaryColor,
         ),
         spacer,
-        Text("$breaths", style: textStyle),
+        Text("${session.breaths}", style: textStyle),
       ]),
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
         heart,
@@ -302,7 +302,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             session.breaths = breaths;
             session.heartrates = _heartrates;
             _send(session.toJson());
-            _showSessionSnackBar(session, breaths);
+            _showSessionSnackBar(session);
           });
         } else {
           setState(() {
