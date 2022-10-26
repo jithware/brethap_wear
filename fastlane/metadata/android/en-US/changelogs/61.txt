@@ -1,4 +1,0 @@
-Wear OS release version: 1.0.4+61
-* Track heartrate
-* Replace text with icons
-* Minor enhancements

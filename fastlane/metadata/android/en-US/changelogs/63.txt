@@ -1,0 +1,4 @@
+Wear OS release version: 1.0.4+63
+* UI in dark theme
+* Replace text with icons
+* Minor enhancements
