@@ -109,16 +109,26 @@ Future<void> main() async {
       debugPrint("Demo Custom(${stopwatch.elapsed})...");
       await tester.pump(wait);
 
+      // tap presets
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+
+      // tap phone preference
+      await tester.pump(wait);
+      await tester.tap(find.byKey(const Key(HomeWidget.phonePreference)));
+      await tester.pumpAndSettle();
+
+      // wait for snackbar to close
+      await tester.pump(wait * 3);
+      await tester.pumpAndSettle();
+
       // tap connect
       await tester.tap(find.byKey(const Key(HomeWidget.keyConnect)));
+      await tester.pump(wait);
 
       await tester.pumpAndSettle();
       takeScreenshot(binding, "${snapshot++}_custom.png");
 
-      await tester.pump(wait);
-
-      // wait for snackbar to close
-      await tester.pump(HomeWidget.snackBarDuration);
       await tester.pump(wait);
 
       await tester.pumpAndSettle();
