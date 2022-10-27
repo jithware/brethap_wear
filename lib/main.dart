@@ -379,7 +379,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               backgroundColor: Theme.of(context).canvasColor,
-              content: const Text("Not paired to Brethap phone app\n",
+              content: const Text("Not paired to Brethap phone app\n\n",
                   style: TextStyle(
                     color: Colors.white,
                   )),
@@ -476,11 +476,8 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   Widget _getCenterWidgets(double leftPad, double rightPad) {
-    Widget heart = const SizedBox.shrink(),
-        spacer = const SizedBox.shrink(),
-        bpm = const Text("");
     const double iconSize = 15.0;
-
+    Text bpm = const Text("-");
     if (_isRunning && _hasHeartRate) {
       if (_heartrates != null && _heartrates!.isNotEmpty) {
         int heartrate = _heartrates!.last.toInt();
@@ -488,9 +485,6 @@ class _HomeWidgetState extends State<HomeWidget> {
           "$heartrate",
         );
       }
-      heart = Icon(Icons.favorite,
-          size: iconSize, color: Theme.of(context).primaryColor);
-      spacer = const SizedBox(width: 5);
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -504,8 +498,12 @@ class _HomeWidgetState extends State<HomeWidget> {
         Text(
           _timer,
         ),
-        spacer,
-        heart,
+        const SizedBox(width: 5),
+        Icon(
+          Icons.favorite,
+          size: iconSize,
+          color: Theme.of(context).primaryColor,
+        ),
         const SizedBox(width: 1),
         bpm,
       ],

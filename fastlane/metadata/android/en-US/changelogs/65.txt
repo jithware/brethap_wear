@@ -1,4 +1,5 @@
-Wear OS release version: 1.0.4+63
+Wear OS release version: 1.0.4+65
+* Track heart rate
 * UI in dark theme
 * Replace text with icons
 * Minor enhancements
