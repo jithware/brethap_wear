@@ -36,7 +36,11 @@ class MainWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData.dark().copyWith(primaryColor: Colors.blue),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      // To change device to dark mode run: adb shell "cmd uimode night yes"
+      darkTheme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
       home: const HomeWidget(title: title),
     );
@@ -50,9 +54,8 @@ class HomeWidget extends StatefulWidget {
   static const String appName = "Brethap",
       phonePreference = "Phone Preference",
       keyConnect = "Connect",
-      keyStart = "Start",
-      keyDrag = "Drag";
-  static const snackBarDuration = Duration(seconds: 5);
+      keyStart = "Start";
+  static const snackBarDuration = Duration(seconds: 3);
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -83,6 +86,10 @@ class _HomeWidgetState extends State<HomeWidget> {
     PHYS_SIGH_TEXT,
     DEFAULT_TEXT,
   ];
+
+  final TextStyle _textStyle = const TextStyle(
+    color: Colors.black,
+  );
 
   @override
   initState() {
@@ -211,14 +218,12 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   void _showSessionSnackBar(Session session) {
     Widget heart = const SizedBox.shrink(), bpm = const Text("");
-    TextStyle textStyle = const TextStyle(
-      color: Colors.white,
-    );
+
     List<double>? heartrates = session.heartrates;
     if (heartrates != null) {
       int average = heartrates.average.toInt();
       if (average > 0) {
-        bpm = Text("$average", style: textStyle);
+        bpm = Text("$average", style: _textStyle);
         heart = Icon(Icons.favorite, color: Theme.of(context).primaryColor);
       }
     }
@@ -228,7 +233,6 @@ class _HomeWidgetState extends State<HomeWidget> {
         Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
         Icon(
-          key: const Key(HomeWidget.keyDrag),
           Icons.timer,
           color: Theme.of(context).primaryColor,
         ),
@@ -236,7 +240,7 @@ class _HomeWidgetState extends State<HomeWidget> {
         Text(
             getDurationString(
                 roundDuration(session.end.difference(session.start))),
-            style: textStyle),
+            style: _textStyle),
       ]),
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
         Icon(
@@ -244,7 +248,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           color: Theme.of(context).primaryColor,
         ),
         spacer,
-        Text("${session.breaths}", style: textStyle),
+        Text("${session.breaths}", style: _textStyle),
       ]),
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
         heart,
@@ -378,11 +382,10 @@ class _HomeWidgetState extends State<HomeWidget> {
             _preference = _phonePreference!;
           } else {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              duration: HomeWidget.snackBarDuration,
               backgroundColor: Theme.of(context).canvasColor,
-              content: const Text("Not paired to Brethap phone app\n\n",
-                  style: TextStyle(
-                    color: Colors.white,
-                  )),
+              content: Text("Not paired to Brethap phone app\n\n",
+                  style: _textStyle),
             ));
           }
           break;

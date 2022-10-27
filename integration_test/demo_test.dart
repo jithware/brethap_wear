@@ -65,10 +65,10 @@ Future<void> main() async {
 
       await tester.pump(wait);
 
-      // drag to close snackbar
-      finder = find.byKey(const Key(HomeWidget.keyDrag));
-      expect(finder, findsOneWidget);
-      await tester.drag(finder, const Offset(0, 100));
+      // wait for snackbar to close
+      await tester.pump(HomeWidget.snackBarDuration);
+      await tester.pumpAndSettle();
+
       await tester.pump(wait);
 
       await tester.pumpAndSettle();
