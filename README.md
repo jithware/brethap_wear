@@ -14,7 +14,6 @@ Slimmed down version of [Brethap](https://github.com/jithware/brethap) for Wear 
 ![duration](fastlane/metadata/android/en-US/images/wearScreenshots/3_duration.png)
 ![preset1](fastlane/metadata/android/en-US/images/wearScreenshots/4_preset.png)
 ![preset2](fastlane/metadata/android/en-US/images/wearScreenshots/5_preset.png)
-![custom](fastlane/metadata/android/en-US/images/wearScreenshots/6_custom.png)
 
 ## Usage
 

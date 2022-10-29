@@ -125,9 +125,13 @@ Future<void> main() async {
       // tap connect
       await tester.tap(find.byKey(const Key(HomeWidget.keyConnect)));
       await tester.pump(wait);
-
       await tester.pumpAndSettle();
-      takeScreenshot(binding, "${snapshot++}_custom.png");
+
+      // Presumably Google is rejecting app submission because this screenshot
+      // can not be produced without being connected to phone. This can not be
+      // confirmed as there is no screenshots available in the Google Play
+      // Pre-launch report details for Wear OS app bundles at this time
+      // takeScreenshot(binding, "${snapshot++}_custom.png");
 
       await tester.pump(wait);
 
