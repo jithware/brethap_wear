@@ -36,11 +36,7 @@ class MainWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      // To change device to dark mode run: adb shell "cmd uimode night yes"
-      darkTheme: ThemeData.dark(),
+      theme: ThemeData.dark().copyWith(primaryColor: Colors.blue),
       debugShowCheckedModeBanner: false,
       home: const HomeWidget(title: title),
     );
@@ -88,7 +84,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   ];
 
   final TextStyle _textStyle = const TextStyle(
-    color: Colors.black,
+    color: Colors.white,
   );
 
   @override

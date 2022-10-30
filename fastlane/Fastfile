@@ -31,7 +31,7 @@ platform :android do
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
       skip_upload_images: true,
-      skip_upload_screenshots: false,
+      skip_upload_screenshots: true,
       version_codes_to_retain:[64], # previous brethap version if not updated
       validate_only: false
     )
