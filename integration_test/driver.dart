@@ -24,7 +24,7 @@ Future<void> main() async {
       ],
     );
     await integrationDriver(
-      onScreenshot: (String name, List<int> bytes) async {
+      onScreenshot: (String name, List<int> bytes, [args]) async {
         final File image =
             await File('screenshots/android/$name').create(recursive: true);
         image.writeAsBytesSync(bytes);

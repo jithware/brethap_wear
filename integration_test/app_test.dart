@@ -1,3 +1,6 @@
+// To execute integration test run:
+// flutter drive --no-pub --driver=integration_test/driver.dart --target=integration_test/app_test.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
