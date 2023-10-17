@@ -5,7 +5,6 @@
 // To execute demo script run:
 // ../brethap/screenshots/demo.sh emulator-5554
 
-import 'package:brethap/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -88,16 +87,9 @@ Future<void> main() async {
 
       await tester.pump(wait);
 
-      // drag to bottom of presets
-      await tester.dragUntilVisible(find.byKey(const Key(BOX_TEXT)),
-          find.byKey(const Key(DEFAULT_TEXT)), const Offset(0, -1));
-
-      await tester.pumpAndSettle();
-      takeScreenshot(binding, "${snapshot++}_preset.png");
-
       // tap default
       await tester.pump(wait);
-      await tester.tap(find.byKey(const Key(DEFAULT_TEXT)));
+      await tester.tap(find.byKey(Key(HomeWidget.presets[1])));
       await tester.pump(wait);
 
       await tester.pumpAndSettle();

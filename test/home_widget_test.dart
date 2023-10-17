@@ -1,4 +1,3 @@
-import 'package:brethap/constants.dart';
 import 'package:brethap/hive_storage.dart';
 import 'package:brethap/wear.dart';
 import 'package:brethap_wear/main.dart';
@@ -89,8 +88,8 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   await tester.pumpAndSettle();
 
   // Tap preset
-  preference = Preference.get478Pref();
-  finder = find.byKey(const Key(PRESET_478_TEXT));
+  preference = Preference.getDefaultPref()..duration = 120;
+  finder = find.byKey(Key(HomeWidget.presets[1]));
   expect(finder, findsOneWidget);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
@@ -104,38 +103,8 @@ Future<void> testHomeWidget(WidgetTester tester) async {
   await tester.pumpAndSettle();
 
   // Tap preset
-  preference = Preference.getBoxPref();
-  finder = find.byKey(const Key(BOX_TEXT));
-  expect(finder, findsOneWidget);
-  await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
-  await tester.tap(finder);
-  await tester.pumpAndSettle();
-  expect(find.text(getDurationString(Duration(seconds: preference.duration))),
-      findsOneWidget);
-
-  // Tap presets
-  await tester.tap(find.byType(PopupMenuButton<String>));
-  await tester.pumpAndSettle();
-
-  // Tap preset
-  preference = Preference.getPhysSighPref();
-  finder = find.byKey(const Key(PHYS_SIGH_TEXT));
-  expect(finder, findsOneWidget);
-  await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
-  await tester.tap(finder);
-  await tester.pumpAndSettle();
-  expect(find.text(getDurationString(Duration(seconds: preference.duration))),
-      findsOneWidget);
-
-  // Tap presets
-  await tester.tap(find.byType(PopupMenuButton<String>));
-  await tester.pumpAndSettle();
-
-  // Tap preset
-  preference = Preference.getDefaultPref();
-  finder = find.byKey(const Key(DEFAULT_TEXT));
+  preference = Preference.getDefaultPref()..duration = 300;
+  finder = find.byKey(Key(HomeWidget.presets[2]));
   expect(finder, findsOneWidget);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();

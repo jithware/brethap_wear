@@ -48,16 +48,23 @@ class HomeWidget extends StatefulWidget {
   final String title;
 
   static const String appName = "Brethap",
-      phonePreference = "Phone Preference",
+      phonePreference = "Phone",
       keyConnect = "Connect",
       keyStart = "Start";
   static const snackBarDuration = Duration(seconds: 3);
+
+  static const List<String> presets = [
+    HomeWidget.phonePreference,
+    "2 Minutes",
+    "5 Minutes",
+  ];
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
 }
 
-class _HomeWidgetState extends State<HomeWidget> {
+class _HomeWidgetState extends State<HomeWidget>
+    with WidgetsBindingObserver /* detect app inactive/resumed */ {
   Duration _duration = const Duration(seconds: 0);
   bool _isRunning = false,
       _hasVibrate = false,
@@ -74,14 +81,6 @@ class _HomeWidgetState extends State<HomeWidget> {
   Stream? _heartStream;
   StreamSubscription? _heartSubscription;
   List<double>? _heartrates;
-
-  final List<String> presets = [
-    HomeWidget.phonePreference,
-    PRESET_478_TEXT,
-    BOX_TEXT,
-    PHYS_SIGH_TEXT,
-    DEFAULT_TEXT,
-  ];
 
   final TextStyle _textStyle = const TextStyle(
     color: Colors.white,
@@ -106,13 +105,33 @@ class _HomeWidgetState extends State<HomeWidget> {
     // Init sensors
     _initSensors();
 
+    // Detect app inactive/resumed
+    WidgetsBinding.instance.addObserver(this);
+
     super.initState();
   }
 
   @override
   void dispose() {
     debugPrint("$widget.dispose");
+
+    WidgetsBinding.instance.removeObserver(this);
+
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    debugPrint("$widget state: $state");
+    switch (state) {
+      case AppLifecycleState.resumed:
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        _isRunning = false;
+    }
   }
 
   // To pair phone for testing see:
@@ -372,34 +391,28 @@ class _HomeWidgetState extends State<HomeWidget> {
 
     setState(() {
       _isRunning = false;
-      switch (value) {
-        case HomeWidget.phonePreference:
-          if (_phonePreference != null) {
-            _preference = _phonePreference!;
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              duration: HomeWidget.snackBarDuration,
-              backgroundColor: Theme.of(context).canvasColor,
-              content: Text("Not paired to Brethap phone app\n\n",
-                  style: _textStyle),
-            ));
-          }
-          break;
-        case PRESET_478_TEXT:
-          _preference = Preference.get478Pref();
-          break;
-        case BOX_TEXT:
-          _preference = Preference.getBoxPref();
-          break;
-        case PHYS_SIGH_TEXT:
-          _preference = Preference.getPhysSighPref();
-          break;
-        case DEFAULT_TEXT:
-          _preference = Preference.getDefaultPref();
-          break;
-        default:
-          _preference = Preference.getDefaultPref();
-          break;
+
+      if (value == HomeWidget.presets[0]) {
+        if (_phonePreference != null) {
+          _preference = _phonePreference!;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            duration: HomeWidget.snackBarDuration,
+            backgroundColor: Theme.of(context).canvasColor,
+            content:
+                Text("Not paired to Brethap phone app\n\n", style: _textStyle),
+          ));
+        }
+      } else if (value == HomeWidget.presets[1]) {
+        _preference = Preference.getDefaultPref()
+          ..duration = 120
+          ..name = value.substring(0, 5);
+      } else if (value == HomeWidget.presets[2]) {
+        _preference = Preference.getDefaultPref()
+          ..duration = 300
+          ..name = value.substring(0, 5);
+      } else {
+        _preference = Preference.getDefaultPref();
       }
 
       _title = _preference.name;
@@ -452,7 +465,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             _updatePreference(value);
           },
           itemBuilder: (BuildContext context) {
-            return presets.map((String choice) {
+            return HomeWidget.presets.map((String choice) {
               return PopupMenuItem<String>(
                 value: choice,
                 child: SizedBox(
