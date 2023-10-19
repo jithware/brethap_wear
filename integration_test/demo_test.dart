@@ -110,6 +110,8 @@ Future<void> main() async {
       await tester.tap(find.byKey(const Key(HomeWidget.phonePreference)));
       await tester.pumpAndSettle();
 
+      takeScreenshot(binding, "${snapshot++}_custom.png");
+
       // wait for snackbar to close
       await tester.pump(wait * 3);
       await tester.pumpAndSettle();

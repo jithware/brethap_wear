@@ -14,3 +14,8 @@ To convert mp4 to webp, install [ffmpeg](https://ffmpeg.org/download.html) and r
 ```
 ffmpeg -y -i screenshots/android/<video>.mp4 -vcodec libwebp -filter:v fps=10 -lossless 0 -compression_level 3 -q:v 70 -loop 1 -preset picture -an -vsync 0 screenshots/android/<video>.webp
 ```
+
+Google Play requires minimum size of wear screenshots to be 384x384, run:
+```
+mogrify -resize 384x384 fastlane/metadata/android/en-US/images/wearScreenshots/*.png
+```

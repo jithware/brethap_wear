@@ -36,7 +36,10 @@ class MainWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData.dark().copyWith(primaryColor: Colors.blue),
+      theme: ThemeData.dark().copyWith(
+          primaryColor: Colors.blue,
+          scaffoldBackgroundColor: Colors.black,
+          canvasColor: Colors.black),
       debugShowCheckedModeBanner: false,
       home: const HomeWidget(title: title),
     );
@@ -247,6 +250,7 @@ class _HomeWidgetState extends State<HomeWidget>
     Column content =
         Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        spacer,
         Icon(
           Icons.timer,
           color: Theme.of(context).primaryColor,
@@ -258,6 +262,7 @@ class _HomeWidgetState extends State<HomeWidget>
             style: _textStyle),
       ]),
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        spacer,
         Icon(
           Icons.air,
           color: Theme.of(context).primaryColor,
@@ -266,10 +271,12 @@ class _HomeWidgetState extends State<HomeWidget>
         Text("${session.breaths}", style: _textStyle),
       ]),
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        spacer,
         heart,
         spacer,
         bpm,
-      ])
+      ]),
+      const SizedBox(height: 20.0)
     ]);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -406,11 +413,11 @@ class _HomeWidgetState extends State<HomeWidget>
       } else if (value == HomeWidget.presets[1]) {
         _preference = Preference.getDefaultPref()
           ..duration = 120
-          ..name = value.substring(0, 5);
+          ..name = value;
       } else if (value == HomeWidget.presets[2]) {
         _preference = Preference.getDefaultPref()
           ..duration = 300
-          ..name = value.substring(0, 5);
+          ..name = value;
       } else {
         _preference = Preference.getDefaultPref();
       }
@@ -573,6 +580,7 @@ class _HomeWidgetState extends State<HomeWidget>
               IconButton(
                   key: const Key(HomeWidget.keyStart),
                   iconSize: iconSize,
+                  padding: const EdgeInsets.only(bottom: 3.0),
                   onPressed: () {
                     setState(() {
                       _buttonPressed();
