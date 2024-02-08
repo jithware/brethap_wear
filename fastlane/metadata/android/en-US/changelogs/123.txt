@@ -1,3 +1,4 @@
 Wear OS release version: 1.0.7+123
 * Fix android 12+ splash icon
+* Add additional menu presets
 * Other minor enhancements

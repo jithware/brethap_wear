@@ -1,7 +1,7 @@
 // To execute demo run:
 // flutter test integration_test/demo_test.dart
 // To execute demo with screenshots saved run:
-// flutter drive --no-pub --driver=integration_test/driver.dart --target=integration_test/demo_test.dart
+// flutter drive -d emulator-5554 --no-pub --driver=integration_test/driver.dart --target=integration_test/demo_test.dart
 // To execute demo script run:
 // ../brethap/screenshots/demo.sh emulator-5554
 

@@ -89,7 +89,7 @@ Future<void> testHomeWidget(WidgetTester tester) async {
 
   // Tap preset
   preference = Preference.getDefaultPref()..duration = 120;
-  finder = find.byKey(Key(HomeWidget.presets[1]));
+  finder = find.byKey(Key(HomeWidget.presets[2]));
   expect(finder, findsOneWidget);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
@@ -104,7 +104,7 @@ Future<void> testHomeWidget(WidgetTester tester) async {
 
   // Tap preset
   preference = Preference.getDefaultPref()..duration = 300;
-  finder = find.byKey(Key(HomeWidget.presets[2]));
+  finder = find.byKey(Key(HomeWidget.presets[3]));
   expect(finder, findsOneWidget);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();

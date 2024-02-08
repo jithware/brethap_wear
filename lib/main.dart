@@ -58,8 +58,10 @@ class HomeWidget extends StatefulWidget {
 
   static const List<String> presets = [
     HomeWidget.phonePreference,
-    "2 Minutes",
-    "5 Minutes",
+    "01",
+    "02",
+    "05",
+    "10",
   ];
 
   @override
@@ -411,13 +413,13 @@ class _HomeWidgetState extends State<HomeWidget>
           ));
         }
       } else if (value == HomeWidget.presets[1]) {
-        _preference = Preference.getDefaultPref()
-          ..duration = 120
-          ..name = value;
+        _preference = Preference.getDefaultPref()..duration = 60;
       } else if (value == HomeWidget.presets[2]) {
-        _preference = Preference.getDefaultPref()
-          ..duration = 300
-          ..name = value;
+        _preference = Preference.getDefaultPref()..duration = 120;
+      } else if (value == HomeWidget.presets[3]) {
+        _preference = Preference.getDefaultPref()..duration = 300;
+      } else if (value == HomeWidget.presets[4]) {
+        _preference = Preference.getDefaultPref()..duration = 600;
       } else {
         _preference = Preference.getDefaultPref();
       }
@@ -460,7 +462,7 @@ class _HomeWidgetState extends State<HomeWidget>
     return const SizedBox.shrink();
   }
 
-  List<Widget> _getActions(double rightPad, double topPad, double prefWidth) {
+  List<Widget> _getActions(double rightPad, double topPad) {
     if (!_isRunning) {
       return [
         PopupMenuButton<String>(
@@ -472,20 +474,69 @@ class _HomeWidgetState extends State<HomeWidget>
             _updatePreference(value);
           },
           itemBuilder: (BuildContext context) {
-            return HomeWidget.presets.map((String choice) {
-              return PopupMenuItem<String>(
-                value: choice,
-                child: SizedBox(
-                  width: prefWidth,
-                  child: Text(choice,
-                      key: Key(choice),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                      )),
+            return [
+              PopupMenuItem(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 0, bottom: 0),
+                  child: Column(
+                    children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            key: Key(HomeWidget.presets[0]),
+                            icon: Icon(Icons.phone_android,
+                                color: Theme.of(context).primaryColor),
+                            onPressed: () {
+                              Navigator.pop(context, HomeWidget.presets[0]);
+                            },
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            key: Key(HomeWidget.presets[1]),
+                            onPressed: () {
+                              Navigator.pop(context, HomeWidget.presets[1]);
+                            },
+                            child: Text(HomeWidget.presets[1]),
+                          ),
+                          TextButton(
+                            key: Key(HomeWidget.presets[2]),
+                            onPressed: () {
+                              Navigator.pop(context, HomeWidget.presets[2]);
+                            },
+                            child: Text(HomeWidget.presets[2]),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            key: Key(HomeWidget.presets[3]),
+                            onPressed: () {
+                              Navigator.pop(context, HomeWidget.presets[3]);
+                            },
+                            child: Text(HomeWidget.presets[3]),
+                          ),
+                          TextButton(
+                            key: Key(HomeWidget.presets[4]),
+                            onPressed: () {
+                              Navigator.pop(context, HomeWidget.presets[4]);
+                            },
+                            child: Text(HomeWidget.presets[4]),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
-              );
-            }).toList();
+              )
+            ];
           },
         )
       ];
@@ -537,13 +588,11 @@ class _HomeWidgetState extends State<HomeWidget>
             rightPad = 0.0,
             topPad = 0.0,
             fontSize = 10.0,
-            prefWidth = 150,
             iconSize = 40.0;
         if (shape == WearShape.round) {
           leftPad = 30.0;
           rightPad = 35.0;
           topPad = 30.0;
-          prefWidth = 125;
         }
         return Scaffold(
           appBar: AppBar(
@@ -557,7 +606,7 @@ class _HomeWidgetState extends State<HomeWidget>
                           fontSize: fontSize))),
               backgroundColor: Colors.transparent,
               elevation: 0,
-              actions: _getActions(rightPad, topPad, prefWidth)),
+              actions: _getActions(rightPad, topPad)),
           extendBodyBehindAppBar: true,
           body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
