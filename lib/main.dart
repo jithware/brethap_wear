@@ -29,7 +29,7 @@ Future<void> main() async {
 }
 
 class MainWidget extends StatelessWidget {
-  const MainWidget({Key? key}) : super(key: key);
+  const MainWidget({super.key});
 
   static const String title = "Brethap for Wear OS";
 
@@ -47,7 +47,7 @@ class MainWidget extends StatelessWidget {
 }
 
 class HomeWidget extends StatefulWidget {
-  const HomeWidget({Key? key, required this.title}) : super(key: key);
+  const HomeWidget({super.key, required this.title});
   final String title;
 
   static const String appName = "Brethap",
